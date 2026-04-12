@@ -88,6 +88,7 @@ dungeon-lab/
 │   └── package.json
 └── frontend/
     └── index.html      ← The entire dungeon (one file!)
+|__ README.md
 ```
 
 ---
