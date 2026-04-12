@@ -4,276 +4,961 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>DUNGEON LAB — Journal of Applied Dungeoneering</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Share+Tech+Mono&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg: #050305;
-  --bg2: #0d090d;
-  --bg3: #140f14;
-  --panel: #0f0b0f;
-  --border: #2a1a2a;
-  --border2: #4a2a4a;
-  --gold: #d4a843;
-  --gold2: #f0c060;
-  --gold3: #fff0a0;
-  --red: #8b0000;
-  --red2: #cc2222;
-  --red3: #ff4444;
-  --green: #1a6b1a;
-  --green2: #22cc44;
-  --blue: #1a3a6b;
-  --blue2: #4488ff;
-  --purple: #4a0a6b;
-  --purple2: #aa44ff;
-  --lava: #ff4500;
-  --lava2: #ff7700;
-  --text: #e8d8c0;
-  --text2: #a08060;
-  --text3: #604030;
+  --parchment: #1a1025;
+  --parchment2: #130e1e;
+  --parchment3: #0e0a18;
+  --ink: #0a0612;
+  --ink2: #110825;
+  --ink3: #1e1040;
+  --sepia: #7a5c9a;
+  --sepia2: #9a72c8;
+  --sepia3: #b894e8;
+  --gold: #aa66ff;
+  --gold2: #cc88ff;
+  --gold3: #eec4ff;
+  --crimson: #7a1a1a;
+  --crimson2: #aa2828;
+  --crimson3: #d44040;
+  --indigo: #120830;
+  --indigo2: #1e1050;
+  --indigo3: #8866ee;
+  --sage: #1a3a2a;
+  --sage2: #2a7a4a;
+  --moss: #2a6a4a;
+  --purple: #2a0a4a;
+  --purple2: #7a3aaa;
+  --paper-dark: #2a1845;
+  --border-ink: #3a1870;
+  --text: #e8d8ff;
+  --text2: #b090d8;
+  --text3: #7a5c9a;
+  --shadow: rgba(80,20,160,0.3);
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  background: var(--bg);
+  background: #07040f;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
   color: var(--text);
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'IM Fell English', serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* BG LAYER */
+/* PAPER TEXTURE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(120,60,200,0.03) 28px, rgba(120,60,200,0.03) 29px),
+    repeating-linear-gradient(90deg, transparent, transparent 200px, rgba(100,40,180,0.015) 200px, rgba(100,40,180,0.015) 201px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* FLOATING BG LAYER */
 .bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-.bg-rune { position: absolute; font-size: 2rem; opacity: 0.03; animation: float-rune linear infinite; user-select: none; }
+.bg-rune {
+  position: absolute;
+  font-size: 1.8rem;
+  opacity: 0;
+  animation: float-rune linear infinite;
+  user-select: none;
+  filter: hue-rotate(260deg) saturate(0.5);
+}
 @keyframes float-rune {
   from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.04; } 90% { opacity: 0.04; }
-  to { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  10% { opacity: 0.06; } 90% { opacity: 0.06; }
+  to { transform: translateY(-100px) rotate(180deg); opacity: 0; }
 }
-.ember { position: absolute; width: 3px; height: 3px; background: var(--lava); border-radius: 50%; animation: ember-rise linear infinite; box-shadow: 0 0 4px var(--lava2); }
-@keyframes ember-rise { from { transform: translateY(0) translateX(0); opacity: 1; } to { transform: translateY(-200px) translateX(var(--dx, 20px)); opacity: 0; } }
+.ink-dot {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: var(--sepia);
+  border-radius: 50%;
+  animation: ink-float linear infinite;
+  opacity: 0;
+}
+@keyframes ink-float {
+  from { transform: translateY(0) translateX(0); opacity: 0; }
+  20% { opacity: 0.4; }
+  80% { opacity: 0.4; }
+  to { transform: translateY(-180px) translateX(var(--dx, 15px)); opacity: 0; }
+}
 
-/* HEADER */
+/* ══════════════════════════════════════════════
+   HEADER — Engraved journal masthead
+══════════════════════════════════════════════ */
 .header {
-  position: relative; z-index: 10; text-align: center;
-  padding: 1.5rem 1rem 1rem;
-  background: linear-gradient(180deg, #200010 0%, #0d090d 100%);
-  border-bottom: 2px solid var(--border2); overflow: hidden;
+  position: relative; z-index: 10;
+  text-align: center;
+  padding: 0;
+  background: var(--ink);
+  border-bottom: 4px solid var(--gold);
+  overflow: hidden;
 }
-.header::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent, transparent 80px, #ffffff04 80px, #ffffff04 81px); pointer-events: none; }
-.header-top-line { font-size: 0.6rem; color: var(--text3); letter-spacing: 4px; margin-bottom: 0.5rem; animation: flicker 4s infinite; }
-@keyframes flicker { 0%,95%,100%{opacity:1}96%{opacity:0.3}97%{opacity:1}98%{opacity:0.1}99%{opacity:1} }
-.journal-name { font-family: 'Cinzel', serif; font-weight: 900; font-size: clamp(1.6rem,5vw,3.2rem); color: var(--gold); text-shadow: 0 0 20px #d4a84388,0 0 60px #d4a84322; letter-spacing: 4px; line-height: 1; animation: title-pulse 3s ease-in-out infinite; }
-@keyframes title-pulse { 0%,100%{text-shadow:0 0 20px #d4a84388,0 0 60px #d4a84322}50%{text-shadow:0 0 30px #d4a843cc,0 0 80px #d4a84344,0 0 120px #d4a84311} }
-.journal-skull { font-size: 1.5rem; vertical-align: middle; margin: 0 0.5rem; animation: skull-bob 2s ease-in-out infinite; display: inline-block; }
-@keyframes skull-bob { 0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-4px) rotate(5deg)} }
-.journal-sub { font-family: 'Crimson Pro', serif; font-style: italic; font-size: clamp(0.7rem,2vw,0.9rem); color: var(--text2); margin-top: 0.3rem; letter-spacing: 2px; }
-.journal-meta { font-size: 0.6rem; color: var(--text3); margin-top: 0.25rem; letter-spacing: 3px; }
-.header-bars { display: flex; justify-content: center; gap: 3px; margin-top: 0.75rem; }
-.header-bar { width: 40px; height: 2px; background: var(--border2); border-radius: 1px; }
-.header-bar.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold); width: 80px; }
+.header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px),
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.008) 40px, rgba(255,255,255,0.008) 41px);
+  pointer-events: none;
+}
+.header-inner {
+  position: relative;
+  padding: 0.15rem 2rem 0.25rem;
+  border: 1px solid rgba(150,80,255,0.35);
+  margin: 0.5rem;
+}
 
-/* STATUS BAR */
+/* Ornamental corners */
+.header-inner::before, .header-inner::after,
+.header-inner .corner-bl, .header-inner .corner-br {
+  content: '';
+  position: absolute;
+  width: 24px; height: 24px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.7;
+}
+.header-inner::before { top: 4px; left: 4px; border-width: 2px 0 0 2px; }
+.header-inner::after { top: 4px; right: 4px; border-width: 2px 2px 0 0; }
+.header-inner .corner-bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; }
+.header-inner .corner-br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; }
+
+.header-vol {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem;
+  color: var(--sepia3);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  opacity: 0.9;
+}
+.journal-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  color: var(--gold2);
+  letter-spacing: 6px;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 40px rgba(150,80,255,0.25);
+  animation: title-breathe 6s ease-in-out infinite;
+}
+@keyframes title-breathe {
+  0%,100% { text-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 30px rgba(150,80,255,0.18); }
+  50% { text-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 50px rgba(150,80,255,0.35), 0 0 80px rgba(200,146,10,0.1); }
+}
+.header-ornament { color: var(--gold); font-size: 1rem; letter-spacing: 3px; margin: 0 0.5rem; vertical-align: middle; }
+.journal-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(0.65rem,1.8vw,0.85rem);
+  color: var(--parchment3);
+  margin-top: 0.05rem;
+  letter-spacing: 1.5px;
+  opacity: 0.85;
+}
+.journal-meta {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.55rem;
+  color: var(--sepia3);
+  margin-top: 0.05rem;
+  letter-spacing: 3px;
+  opacity: 0.7;
+}
+
+/* Rule lines */
+.header-rule {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.2rem;
+}
+.h-rule-line { flex: 1; max-width: 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.h-rule-diamond { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+.h-rule-line.gold { max-width: 60px; background: var(--gold); }
+
+/* ══════════════════════════════════════════════
+   STATUS BAR
+══════════════════════════════════════════════ */
 .status-bar {
   position: relative; z-index: 10;
-  background: #0a050a;
-  border-bottom: 1px solid var(--border);
-  padding: 0.4rem 1rem;
+  background: var(--indigo);
+  border-bottom: 2px solid rgba(100,50,200,0.35);
+  padding: 0.3rem 1rem;
   display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
 }
-.sb-label { font-size: 0.6rem; color: var(--text3); letter-spacing: 2px; }
-.api-status-pill { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); white-space: nowrap; transition: all 0.3s; }
-.api-status-pill.ok { border-color: var(--green2); color: var(--green2); background: #00ff0008; }
-.api-status-pill.err { border-color: var(--red2); color: var(--red2); }
-.api-status-pill.checking { border-color: var(--gold); color: var(--gold); }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.2s infinite; }
-@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
-.teapot-418 { margin-left: auto; font-size: 0.58rem; color: var(--blue2); opacity: 0.7; letter-spacing: 1px; }
+.sb-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem;
+  color: var(--parchment3);
+  letter-spacing: 2px;
+}
+.api-status-pill {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.62rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  border: 1px solid rgba(180,140,255,0.3);
+  background: rgba(0,0,0,0.2);
+  color: var(--parchment3);
+  white-space: nowrap;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+.api-status-pill.ok { border-color: var(--sage2); color: #7dd888; background: rgba(42,74,48,0.3); }
+.api-status-pill.err { border-color: var(--crimson2); color: #e07070; }
+.api-status-pill.checking { border-color: var(--gold); color: var(--gold2); }
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.teapot-418 {
+  margin-left: auto;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.56rem;
+  color: var(--indigo3);
+  color: rgba(160,170,220,0.7);
+  letter-spacing: 1px;
+}
 
-/* MAIN LAYOUT */
-.app-wrap { position: relative; z-index: 10; display: grid; grid-template-columns: 200px 1fr 280px; height: calc(100vh - 148px); min-height: 520px; }
+/* ══════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════ */
+.app-wrap {
+  position: relative; z-index: 10;
+  display: grid;
+  grid-template-columns: 230px 1fr 300px;
+  height: calc(100vh - 130px);
+  min-height: 520px;
+}
 
-/* PALETTE */
-.palette { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.palette-header { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold); letter-spacing: 3px; }
-.palette-scroll { flex: 1; overflow-y: auto; padding: 0.5rem; }
-.palette-section-label { font-size: 0.55rem; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; padding: 0.5rem 0.25rem 0.3rem; }
-.tile-option { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 4px; cursor: pointer; transition: all 0.2s; background: var(--bg3); position: relative; overflow: hidden; }
-.tile-option::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,transparent,#ffffff08,transparent); transform: translateX(-100%); transition: transform 0.4s; }
-.tile-option:hover::before { transform: translateX(100%); }
-.tile-option:hover { border-color: var(--gold); transform: translateX(2px); }
-.tile-option.active { border-color: var(--gold2); background: #2a1a0a; box-shadow: 0 0 8px #d4a84322,inset 0 0 8px #d4a84311; }
-.tile-option.active::after { content: '▶'; position: absolute; right: 6px; font-size: 0.5rem; color: var(--gold2); }
-.t-emoji { font-size: 1.1rem; width: 1.3rem; text-align: center; flex-shrink: 0; }
+/* ══════════════════════════════════════════════
+   PALETTE — Left column, manuscript TOC style
+══════════════════════════════════════════════ */
+.palette {
+  background: var(--ink2);
+  border-right: 3px solid var(--border-ink);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
+}
+.palette::after {
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(150,80,255,0.6), transparent);
+  opacity: 0.15;
+}
+.palette-header {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(150,80,255,0.30);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.6rem;
+  color: var(--gold2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px;
+}
+.palette-scroll { flex: 1; overflow-y: auto; padding: 0.4rem; }
+.palette-section-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.55rem;
+  color: var(--sepia3);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 0.55rem 0.4rem 0.25rem;
+  border-top: 1px solid rgba(150,80,255,0.18);
+  margin-top: 0.2rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.palette-section-label::after { content: ''; flex: 1; height: 1px; background: rgba(150,80,255,0.18); }
+.tile-option {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.44rem 0.55rem;
+  border: 1px solid rgba(130,70,220,0.14);
+  border-radius: 2px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  transition: all 0.18s;
+  background: rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+.tile-option::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.tile-option:hover { border-color: rgba(150,80,255,0.45); background: rgba(150,80,255,0.10); transform: translateX(2px); }
+.tile-option:hover::before { opacity: 0.6; }
+.tile-option.active {
+  border-color: var(--gold);
+  background: rgba(150,80,255,0.15);
+  box-shadow: inset 0 0 12px rgba(130,70,220,0.10);
+}
+.tile-option.active::before { opacity: 1; }
+.t-emoji { font-size: 1.4rem; width: 1.8rem; text-align: center; flex-shrink: 0; filter: sepia(0.3); }
 .t-info { flex: 1; min-width: 0; }
-.t-name { font-size: 0.68rem; color: var(--text); line-height: 1; }
-.t-tag { font-size: 0.5rem; color: var(--text3); margin-top: 2px; }
-.t-badge { font-size: 0.5rem; padding: 1px 5px; border-radius: 3px; font-weight: bold; letter-spacing: 0.5px; flex-shrink: 0; }
-.t-badge.danger { background: #8b000033; color: var(--red3); border: 1px solid #8b000088; }
-.t-badge.special { background: #d4a84322; color: var(--gold); border: 1px solid #d4a84344; }
-.t-badge.magic { background: #aa44ff22; color: var(--purple2); border: 1px solid #aa44ff44; }
+.t-name { font-family: 'IM Fell English', serif; font-size: 0.78rem; color: #d8c8f8; line-height: 1; }
+.t-tag { font-family: 'Courier Prime', monospace; font-size: 0.52rem; color: var(--sepia3); margin-top: 2px; font-style: italic; }
+.t-badge {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.48rem;
+  padding: 1px 4px;
+  border-radius: 1px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.t-badge.danger { background: rgba(122,26,26,0.4); color: #ff8888; border: 1px solid rgba(180,40,40,0.6); }
+.t-badge.special { background: rgba(150,80,255,0.25); color: var(--gold2); border: 1px solid rgba(150,80,255,0.45); }
+.t-badge.magic { background: rgba(106,58,138,0.3); color: #c090e8; border: 1px solid rgba(106,58,138,0.5); }
 
-/* GRID */
-.grid-area { display: flex; flex-direction: column; background: var(--bg); overflow: hidden; position: relative; padding-bottom: 220px; }
-.grid-toolbar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0; }
-.tb-btn { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; padding: 0.3rem 0.7rem; border-radius: 3px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); letter-spacing: 0.5px; }
-.tb-btn:hover { border-color: var(--gold); color: var(--gold); }
-.tb-btn.active { border-color: var(--gold); color: var(--gold); background: #2a1a0a; }
-.tb-btn.clear { color: var(--red3); border-color: #8b000044; }
-.tb-btn.clear:hover { border-color: var(--red3); background: #8b000022; }
-.publish-btn { font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 1rem; border-radius: 3px; cursor: pointer; border: 1px solid var(--gold); background: linear-gradient(135deg,#3a1500,#6b2800); color: var(--gold2); letter-spacing: 2px; position: relative; overflow: hidden; transition: all 0.2s; animation: publish-glow 2s infinite; }
-@keyframes publish-glow { 0%,100%{box-shadow:0 0 6px #d4a84333}50%{box-shadow:0 0 16px #d4a84366,0 0 30px #d4a84322} }
-.publish-btn:hover { background: linear-gradient(135deg,#5a2000,#9b3800); color: var(--gold3); }
-.publish-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,transparent,#ffffff11,transparent); transform: translateX(-100%); animation: shimmer 2s infinite; }
+/* ══════════════════════════════════════════════
+   GRID AREA — The dungeon canvas
+══════════════════════════════════════════════ */
+.grid-area {
+  display: flex; flex-direction: column;
+  background: #0c0818;
+  overflow: hidden; position: relative;
+  padding-bottom: 0px;
+}
+
+.grid-toolbar {
+  background: #07040f;
+  border-bottom: 2px solid rgba(100,50,200,0.35);
+  padding: 0.45rem 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  flex-shrink: 0;
+  position: relative;
+}
+.grid-toolbar::after {
+  content: '';
+  position: absolute; bottom: -5px; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(26,18,8,0.08), transparent);
+}
+
+.tb-btn {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.66rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.18s;
+  border: 1px solid rgba(140,70,255,0.40);
+  background: rgba(40,20,80,0.8);
+  color: #c8b0f0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.tb-btn:hover { border-color: rgba(180,120,255,0.7); background: rgba(60,30,120,0.6); }
+.tb-btn.active { border-color: rgba(180,120,255,0.9); background: rgba(80,30,160,0.8); color: #cc88ff; }
+.tb-btn.clear { color: var(--crimson); border-color: rgba(122,26,26,0.5); background: rgba(122,26,26,0.06); }
+.tb-btn.clear:hover { border-color: var(--crimson); background: rgba(122,26,26,0.12); }
+
+.publish-btn {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.32rem 0.9rem;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid var(--gold);
+  background: var(--ink);
+  color: var(--gold2);
+  letter-spacing: 1.5px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+  animation: publish-breathe 3s ease-in-out infinite;
+}
+@keyframes publish-breathe {
+  0%,100% { box-shadow: 0 0 8px rgba(150,80,255,0.25), inset 0 0 8px rgba(120,60,200,0.07); }
+  50% { box-shadow: 0 0 16px rgba(150,80,255,0.45), inset 0 0 16px rgba(200,146,10,0.1); }
+}
+.publish-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(150,80,255,0.18), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 3s infinite;
+}
 @keyframes shimmer { to { transform: translateX(100%); } }
-.selected-label { margin-left: auto; font-size: 0.65rem; color: var(--text3); white-space: nowrap; }
-.selected-label span { color: var(--gold); }
+.publish-btn:hover { background: rgba(80,30,160,0.9); color: #eec4ff; border-color: #cc88ff; }
+
+.selected-label {
+  margin-left: auto;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.6rem;
+  color: var(--sepia);
+  white-space: nowrap;
+}
+.selected-label span { color: #cc88ff; font-weight: 700; }
 
 /* DUNGEON GRID */
-.grid-viewport { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: radial-gradient(ellipse at center,#1a0510 0%,#050305 70%); position: relative; }
-.grid-viewport::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center,transparent 30%,#05030588 100%); pointer-events: none; }
-#dungeon-grid { display: grid; grid-template-columns: repeat(10,52px); grid-template-rows: repeat(8,52px); border: 2px solid var(--border2); box-shadow: 0 0 40px #00000088,0 0 80px #d4a84311,inset 0 0 30px #00000044; position: relative; }
-#dungeon-grid::before { content: ''; position: absolute; inset: -4px; border: 1px solid var(--border); pointer-events: none; }
-.g-cell { width: 52px; height: 52px; border: 0.5px solid #1a0a1a; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: background 0.15s; user-select: none; }
-.g-cell:hover { background: #2a1a2a44; }
-.g-cell.occupied { background: #100810; }
-.g-cell.occupied:hover { background: #180d18; }
-.g-cell .c-emoji { font-size: 1.5rem; line-height: 1; pointer-events: none; transition: transform 0.2s; filter: drop-shadow(0 0 4px #00000088); }
+.grid-viewport {
+  flex: 1; overflow: auto;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 0.75rem 2rem;
+  background:
+    radial-gradient(ellipse at center, rgba(100,40,180,0.15) 0%, transparent 70%),
+    var(--parchment);
+  position: relative;
+}
+.grid-viewport::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(100,40,180,0.03) 40px, rgba(100,40,180,0.03) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(100,40,180,0.02) 40px, rgba(100,40,180,0.02) 41px);
+  pointer-events: none;
+}
+
+/* Grid frame — engraved border look */
+.grid-frame {
+  position: relative;
+  padding: 8px;
+  background: rgba(26,18,8,0.04);
+  border: 2px solid rgba(140,70,255,0.40);
+  box-shadow:
+    0 0 0 1px rgba(150,80,255,0.35),
+    4px 4px 0 rgba(26,18,8,0.15),
+    0 8px 32px rgba(20,5,50,0.25);
+}
+.grid-frame::before, .grid-frame::after {
+  content: '✦';
+  position: absolute;
+  color: var(--gold);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+.grid-frame::before { top: 2px; left: 6px; }
+.grid-frame::after { bottom: 2px; right: 6px; }
+
+/* Cardinal labels */
+.grid-label {
+  position: absolute;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.52rem;
+  color: var(--sepia);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.grid-label.north { top: -18px; left: 50%; transform: translateX(-50%); }
+.grid-label.south { bottom: -18px; left: 50%; transform: translateX(-50%); }
+.grid-label.east { right: -22px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.grid-label.west { left: -22px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+#dungeon-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 48px);
+  grid-template-rows: repeat(8, 48px);
+  border: 1px solid var(--border-ink);
+  position: relative;
+  background: rgba(100,40,180,0.06);
+}
+
+.g-cell {
+  width: 48px; height: 48px;
+  border: 0.5px solid rgba(80,40,140,0.25);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s;
+  user-select: none;
+}
+.g-cell:hover { background: rgba(150,80,255,0.10); }
+.g-cell.occupied { background: rgba(120,60,200,0.07); }
+.g-cell.occupied:hover { background: rgba(150,80,255,0.15); }
+.g-cell .c-emoji {
+  font-size: 1.5rem; line-height: 1;
+  pointer-events: none;
+  transition: transform 0.2s;
+  filter: drop-shadow(1px 2px 3px rgba(20,5,50,0.45));
+}
 .g-cell.occupied:hover .c-emoji { transform: scale(1.15); }
-.g-cell .c-del { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: var(--red); color: #fff; font-size: 0.55rem; border-radius: 2px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 5; line-height: 1; }
+.g-cell .c-del {
+  position: absolute; top: 2px; right: 2px;
+  width: 14px; height: 14px;
+  background: var(--crimson);
+  color: var(--parchment);
+  font-size: 0.5rem;
+  border-radius: 1px;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 5; line-height: 1;
+}
 .g-cell.occupied:hover .c-del { display: flex; }
-.g-cell.pop { animation: cell-pop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
-@keyframes cell-pop { 0%{transform:scale(0) rotate(-10deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0deg)} }
-.g-cell[data-cat="trap"] .c-emoji { filter: drop-shadow(0 0 6px #ff450066); }
-.g-cell[data-cat="monster"] .c-emoji { filter: drop-shadow(0 0 6px #cc222266); }
-.g-cell[data-cat="special"] .c-emoji { filter: drop-shadow(0 0 6px #aa44ff66); }
-.g-cell[data-cat="room"] .c-emoji { filter: drop-shadow(0 0 4px #d4a84344); }
-.g-cell[data-id="teapot"] .c-emoji { filter: drop-shadow(0 0 8px #4488ff88) !important; animation: teapot-pulse 1.5s infinite; }
-@keyframes teapot-pulse { 0%,100%{filter:drop-shadow(0 0 8px #4488ff88)}50%{filter:drop-shadow(0 0 16px #4488ffcc)} }
+.g-cell.pop { animation: cell-pop 0.35s cubic-bezier(0.36,0.07,0.19,0.97); }
+@keyframes cell-pop {
+  0%{transform:scale(0) rotate(-8deg)} 60%{transform:scale(1.15) rotate(3deg)} 100%{transform:scale(1) rotate(0deg)}
+}
+.g-cell[data-cat="trap"] .c-emoji { filter: drop-shadow(0 0 5px rgba(200,60,60,0.5)) drop-shadow(1px 2px 3px rgba(20,5,50,0.45)); }
+.g-cell[data-cat="monster"] .c-emoji { filter: drop-shadow(0 0 4px rgba(100,40,40,0.5)) drop-shadow(1px 2px 3px rgba(20,5,50,0.45)); }
+.g-cell[data-cat="special"] .c-emoji { filter: drop-shadow(0 0 5px rgba(106,58,138,0.5)) drop-shadow(1px 2px 3px rgba(20,5,50,0.35)); }
+.g-cell[data-id="teapot"] .c-emoji { filter: drop-shadow(0 0 7px rgba(64,80,200,0.6)) !important; animation: teapot-pulse 2s infinite; }
+@keyframes teapot-pulse {
+  0%,100%{filter:drop-shadow(0 0 6px rgba(64,80,200,0.5))}
+  50%{filter:drop-shadow(0 0 14px rgba(64,80,200,0.8))}
+}
 
-/* STATS PANEL */
-.stats-panel { background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.stats-header { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-family: 'Cinzel', serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 3px; display: flex; align-items: center; gap: 0.5rem; }
-.stats-live { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: 0.55rem; color: var(--text3); }
-.stats-live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green2); animation: blink 1s infinite; }
-.stats-scroll { flex: 1; overflow-y: auto; padding: 0.6rem; }
-.m-card { border: 1px solid var(--border); border-radius: 4px; padding: 0.55rem 0.6rem; margin-bottom: 0.45rem; background: var(--bg3); position: relative; overflow: hidden; transition: border-color 0.4s; }
-.m-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--gold); opacity: 0.3; transition: opacity 0.3s; }
-.m-card.danger::before { background: var(--red3); }
-.m-card.safe::before { background: var(--green2); }
-.m-card.magic::before { background: var(--purple2); }
-.m-card.update { animation: card-flash 0.5s ease; border-color: var(--gold); }
-.m-card.update::before { opacity: 1; }
-@keyframes card-flash { 0%{background:#d4a84311}100%{background:var(--bg3)} }
-.m-label { font-size: 0.55rem; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.25rem; }
-.m-value { font-size: 1rem; font-family: 'Share Tech Mono', monospace; color: var(--gold2); line-height: 1; }
-.m-value.red { color: var(--red3); }
-.m-value.green { color: var(--green2); }
-.m-value.purple { color: var(--purple2); }
-.m-bar-bg { height: 3px; background: var(--border); border-radius: 2px; margin-top: 0.35rem; overflow: hidden; }
-.m-bar { height: 100%; border-radius: 2px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); background: var(--gold); }
-.m-bar.red { background: var(--red3); }
-.m-bar.green { background: var(--green2); }
-.m-bar.purple { background: var(--purple2); }
-.m-note { font-size: 0.55rem; color: var(--text3); margin-top: 0.3rem; font-family: 'Crimson Pro', serif; font-style: italic; line-height: 1.4; }
-.osha-alert { border-radius: 3px; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; font-size: 0.6rem; letter-spacing: 0.5px; border: 1px solid var(--border); color: var(--text3); background: var(--bg3); transition: all 0.3s; }
-.osha-alert.warn { border-color: #cc222244; color: var(--red2); background: #8b000011; }
-.osha-alert.ok { border-color: #22cc4444; color: var(--green2); background: #00ff0008; }
+/* ══════════════════════════════════════════════
+   STATS PANEL — Right column, lab notebook style
+══════════════════════════════════════════════ */
+.stats-panel {
+  background: var(--ink2);
+  border-left: 3px solid var(--border-ink);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
+}
+.stats-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(150,80,255,0.6), transparent);
+  opacity: 0.15;
+}
+.stats-header {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(150,80,255,0.30);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.58rem;
+  color: var(--gold2);
+  letter-spacing: 2px;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.stats-live { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.stats-live-text { font-family: 'Courier Prime', monospace; font-size: 0.52rem; color: var(--sage2); letter-spacing: 1px; }
+.stats-live-dot { width: 4px; height: 4px; border-radius: 50%; background: #7dd888; animation: blink 1.2s infinite; }
 
-/* CHAT */
-.chat-section { position: fixed; bottom: 0; left: 200px; right: 280px; height: 220px; background: var(--panel); border-top: 2px solid var(--border2); display: flex; flex-direction: column; z-index: 20; }
-.chat-header-bar { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
-.chat-title { font-family: 'Cinzel', serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 2px; flex: 1; }
-.chat-indicators { display: flex; gap: 0.5rem; align-items: center; }
-.reviewer-pill { display: flex; align-items: center; gap: 4px; font-size: 0.55rem; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text3); }
-.reviewer-pill.typing { border-color: var(--gold); color: var(--gold); animation: pill-glow 1s infinite; }
-@keyframes pill-glow { 0%,100%{box-shadow:none}50%{box-shadow:0 0 6px #d4a84344} }
-.chat-messages { flex: 1; overflow-y: auto; padding: 0.4rem 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
-.chat-msg { display: flex; gap: 0.5rem; animation: msg-slide 0.3s cubic-bezier(0.36,0.07,0.19,0.97); }
-@keyframes msg-slide { from{opacity:0;transform:translateY(8px) scale(0.98)}to{opacity:1;transform:none} }
-.c-av { width: 26px; height: 26px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; border: 1px solid var(--border); background: var(--bg3); }
-.c-av.grimm { border-color: #d4a84344; background: #1a0800; }
-.c-av.skull { border-color: #aa44ff44; background: #0d0018; }
-.c-av.voss { border-color: #22cc4444; background: #001808; }
-.c-av.r4 { border-color: #cc222244; background: #180000; }
-.c-av.sys { border-color: var(--border); }
+.stats-scroll { flex: 1; overflow-y: auto; padding: 0.5rem; }
+
+.m-card {
+  border: 1px solid rgba(150,80,255,0.18);
+  border-radius: 2px;
+  padding: 0.5rem 0.55rem;
+  margin-bottom: 0.4rem;
+  background: rgba(0,0,0,0.2);
+  position: relative; overflow: hidden;
+  transition: border-color 0.4s;
+}
+.m-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--gold);
+  opacity: 0.25;
+  transition: opacity 0.3s;
+}
+.m-card.danger::before { background: var(--crimson3); }
+.m-card.safe::before { background: #7dd888; }
+.m-card.magic::before { background: #c090e8; }
+.m-card.update { animation: card-flash 0.5s ease; border-color: rgba(150,80,255,0.55); }
+.m-card.update::before { opacity: 0.8; }
+@keyframes card-flash { 0%{background:rgba(150,80,255,0.12)} 100%{background:rgba(0,0,0,0.3)} }
+
+.m-label {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.55rem;
+  color: var(--sepia2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+  font-weight: 700;
+}
+.m-value {
+  font-family: 'Courier Prime', monospace;
+  font-size: 1rem;
+  color: var(--gold2);
+  line-height: 1;
+  font-weight: 700;
+}
+.m-value.red { color: var(--crimson3); }
+.m-value.green { color: #7dd888; }
+.m-value.purple { color: #c090e8; }
+.m-bar-bg { height: 3px; background: rgba(150,80,255,0.12); border-radius: 1px; margin-top: 0.3rem; overflow: hidden; }
+.m-bar { height: 100%; border-radius: 1px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); background: var(--gold); }
+.m-bar.red { background: var(--crimson3); }
+.m-bar.green { background: #7dd888; }
+.m-bar.purple { background: #c090e8; }
+.m-note {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.62rem;
+  color: var(--sepia2);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.osha-alert {
+  border-radius: 2px;
+  padding: 0.38rem 0.55rem;
+  margin-bottom: 0.45rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(150,80,255,0.25);
+  color: var(--sepia2);
+  background: rgba(0,0,0,0.15);
+  transition: all 0.3s;
+}
+.osha-alert.warn { border-color: rgba(180,40,40,0.5); color: #e07070; background: rgba(122,26,26,0.15); }
+.osha-alert.ok { border-color: rgba(58,106,66,0.5); color: #7dd888; background: rgba(42,74,48,0.2); }
+
+/* ══════════════════════════════════════════════
+   CHAT — Review panel at bottom
+══════════════════════════════════════════════ */
+.chat-section {
+  position: fixed;
+  bottom: 0; left: 230px; right: 300px;
+  height: 120px;
+  background: var(--ink);
+  border-top: 3px solid rgba(140,70,255,0.35);
+  border-top-color: rgba(150,80,255,0.55);
+  display: flex; flex-direction: column;
+  z-index: 20;
+  box-shadow: 0 -4px 20px rgba(20,5,50,0.35);
+}
+.chat-header-bar {
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid rgba(150,80,255,0.25);
+  display: flex; align-items: center; gap: 0.5rem;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
+}
+.chat-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.55rem;
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  flex: 1;
+}
+.chat-indicators { display: flex; gap: 0.4rem; align-items: center; }
+.reviewer-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.55rem;
+  padding: 2px 7px;
+  border-radius: 1px;
+  border: 1px solid rgba(150,80,255,0.30);
+  color: var(--sepia2);
+}
+.reviewer-pill.typing { border-color: var(--gold); color: var(--gold2); animation: pill-glow 1s infinite; }
+@keyframes pill-glow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 6px rgba(150,80,255,0.35)} }
+
+.chat-messages {
+  flex: 1; overflow-y: auto;
+  padding: 0.4rem 0.75rem;
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.chat-msg { display: flex; gap: 0.5rem; animation: msg-slide 0.3s ease; }
+@keyframes msg-slide { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+.c-av {
+  width: 24px; height: 24px;
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(150,80,255,0.25);
+  background: rgba(0,0,0,0.3);
+}
+.c-av.grimm { border-color: rgba(150,80,255,0.45); background: rgba(26,10,0,0.5); }
+.c-av.skull { border-color: rgba(106,58,138,0.4); background: rgba(13,0,24,0.5); }
+.c-av.voss { border-color: rgba(42,74,48,0.5); background: rgba(0,18,8,0.5); }
+.c-av.r4 { border-color: rgba(122,26,26,0.4); background: rgba(24,0,0,0.5); }
 .c-body { flex: 1; min-width: 0; }
-.c-who { font-size: 0.55rem; color: var(--text3); margin-bottom: 2px; display: flex; gap: 6px; align-items: baseline; }
-.c-who .name { font-family: 'Cinzel', serif; }
+.c-who { font-size: 0.58rem; color: var(--sepia2); margin-bottom: 2px; display: flex; gap: 6px; align-items: baseline; }
+.c-who .name { font-family: 'Cinzel Decorative', serif; font-size: 0.52rem; }
 .c-who .name.g { color: var(--gold); }
-.c-who .name.s { color: var(--purple2); }
-.c-who .name.v { color: var(--green2); }
-.c-who .name.r { color: var(--red3); }
-.c-who .role { color: var(--text3); font-style: italic; font-family: 'Crimson Pro', serif; }
-.c-text { font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
-.c-text em { color: var(--gold); font-style: italic; }
-.typing-dots { display: flex; gap: 3px; padding: 6px 0; }
-.typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text3); animation: tdot 1.2s infinite; }
+.c-who .name.s { color: #c090e8; }
+.c-who .name.v { color: #7dd888; }
+.c-who .name.r { color: var(--crimson3); }
+.c-who .role { color: var(--sepia3); font-style: italic; font-family: 'IM Fell English', serif; font-size: 0.58rem; }
+.c-text { font-family: 'IM Fell English', serif; font-size: 0.82rem; color: #d0c0f0; line-height: 1.5; }
+.c-text em { color: var(--gold2); font-style: italic; }
+
+.typing-dots { display: flex; gap: 3px; padding: 5px 0; }
+.typing-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--sepia3); animation: tdot 1.2s infinite; }
 .typing-dot:nth-child(2){animation-delay:0.2s}.typing-dot:nth-child(3){animation-delay:0.4s}
-@keyframes tdot { 0%,100%{transform:translateY(0);opacity:0.3}50%{transform:translateY(-4px);opacity:1} }
+@keyframes tdot { 0%,100%{transform:translateY(0);opacity:0.3} 50%{transform:translateY(-4px);opacity:1} }
 
-/* MODAL */
-.modal-bg { position: fixed; inset: 0; background: #000000cc; display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; backdrop-filter: blur(4px); }
+/* ══════════════════════════════════════════════
+   MODAL — Academic paper style
+══════════════════════════════════════════════ */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(10,4,25,0.75);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem;
+  backdrop-filter: blur(4px);
+}
 .modal-bg.open { display: flex; }
-.modal-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 6px; max-width: 680px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 2rem; position: relative; box-shadow: 0 0 80px #d4a84322,0 40px 80px #00000088; animation: modal-appear 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
-@keyframes modal-appear { from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:none} }
-.modal-close-btn { position: sticky; top: 0; float: right; background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); font-family: 'Share Tech Mono',monospace; font-size: 0.65rem; padding: 0.25rem 0.6rem; cursor: pointer; border-radius: 3px; transition: all 0.2s; z-index: 5; }
-.modal-close-btn:hover { border-color: var(--red3); color: var(--red3); }
-.m-journal-name { font-family: 'Cinzel',serif; font-size: 1rem; color: var(--gold); text-align: center; letter-spacing: 3px; margin-bottom: 0.15rem; }
-.m-journal-sub { font-size: 0.6rem; color: var(--text3); text-align: center; letter-spacing: 2px; margin-bottom: 1.5rem; }
-.m-paper-title { font-family: 'Crimson Pro',serif; font-size: 1.3rem; font-weight: 600; color: var(--text); text-align: center; margin-bottom: 0.3rem; line-height: 1.4; }
-.m-authors { font-family: 'Crimson Pro',serif; font-style: italic; font-size: 0.82rem; color: var(--text2); text-align: center; }
-.m-doi { font-size: 0.6rem; color: var(--text3); text-align: center; margin: 0.3rem 0 1.5rem; letter-spacing: 1px; }
-.m-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
-.m-section { font-family: 'Cinzel',serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 3px; margin-bottom: 0.5rem; }
-.m-body { font-family: 'Crimson Pro',serif; font-size: 0.88rem; color: var(--text2); line-height: 1.75; margin-bottom: 1rem; }
-.review-block { border-left: 2px solid var(--border2); padding: 0.6rem 0.75rem; margin-bottom: 0.6rem; border-radius: 0 4px 4px 0; background: var(--bg3); }
-.review-block.g{border-color:var(--gold)}.review-block.s{border-color:var(--purple2)}.review-block.v{border-color:var(--green2)}.review-block.r4{border-color:var(--red3)}
-.rb-name { font-family: 'Cinzel',serif; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 0.3rem; }
-.rb-name.g{color:var(--gold)}.rb-name.s{color:var(--purple2)}.rb-name.v{color:var(--green2)}.rb-name.r4{color:var(--red3)}
-.rb-text { font-family: 'Crimson Pro',serif; font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
-.verdict-block { border: 2px solid var(--red2); border-radius: 5px; padding: 1.25rem; text-align: center; margin-top: 1rem; background: #8b000011; position: relative; overflow: hidden; }
-.verdict-block.accepted { border-color: var(--green2); background: #00ff0008; }
-.verdict-block::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg,transparent,transparent 10px,#ffffff02 10px,#ffffff02 11px); }
-.verdict-stamp { font-family: 'Cinzel',serif; font-size: clamp(1rem,4vw,1.8rem); font-weight: 900; color: var(--red3); letter-spacing: 4px; text-shadow: 0 0 20px #cc222244; transform: rotate(-3deg); display: inline-block; border: 3px solid var(--red3); padding: 0.2rem 0.75rem; opacity: 0.9; }
-.verdict-stamp.accepted { color: var(--green2); border-color: var(--green2); text-shadow: 0 0 20px #22cc4444; transform: rotate(-2deg); }
-.verdict-reason { font-family: 'Crimson Pro',serif; font-size: 0.85rem; color: var(--text2); margin-top: 0.75rem; line-height: 1.6; position: relative; }
-.teapot-notice { margin-top: 1rem; border: 1px solid #4488ff88; border-radius: 4px; padding: 0.75rem; background: #4488ff08; font-family: 'Share Tech Mono',monospace; font-size: 0.7rem; color: var(--blue2); line-height: 1.8; }
-.teapot-notice .code { background: var(--bg3); padding: 0.4rem; border-radius: 3px; display: block; margin-top: 0.4rem; color: var(--green2); font-size: 0.65rem; }
+.modal-box {
+  background: #0c0818;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  border: 2px solid rgba(140,70,255,0.40);
+  max-width: 700px; width: 100%;
+  max-height: 88vh; overflow-y: auto;
+  padding: 2rem 2.5rem;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(150,80,255,0.45),
+    8px 8px 0 rgba(20,5,50,0.35),
+    0 30px 60px rgba(20,5,50,0.45);
+  animation: modal-appear 0.35s cubic-bezier(0.36,0.07,0.19,0.97);
+  color: #e8d8ff;
+}
+@keyframes modal-appear { from{opacity:0;transform:scale(0.95) translateY(15px)} to{opacity:1;transform:none} }
+.modal-close-btn {
+  position: sticky; top: 0; float: right;
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  color: var(--gold2);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.62rem;
+  padding: 0.22rem 0.55rem;
+  cursor: pointer;
+  border-radius: 1px;
+  transition: all 0.2s;
+  z-index: 5;
+  letter-spacing: 1px;
+}
+.modal-close-btn:hover { border-color: var(--crimson3); color: var(--crimson3); }
 
-/* LOADING */
-.loading-screen { position: fixed; inset: 0; background: #000000ee; display: none; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; gap: 1rem; backdrop-filter: blur(8px); }
+/* Modal content styles */
+.m-journal-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.95rem;
+  color: #e8d8ff;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 0.15rem;
+}
+.m-journal-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.55rem;
+  color: var(--sepia);
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+}
+.m-paper-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e8d8ff;
+  text-align: center;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+.m-authors {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--sepia);
+  text-align: center;
+}
+.m-doi {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.58rem;
+  color: var(--sepia2);
+  text-align: center;
+  margin: 0.3rem 0 1.2rem;
+  letter-spacing: 1px;
+}
+.m-divider {
+  border: none;
+  border-top: 1px solid rgba(150,80,255,0.35);
+  margin: 0.75rem 0;
+  position: relative;
+}
+.m-divider::after {
+  content: '✦';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0c0818;
+  padding: 0 8px;
+  color: var(--sepia2);
+  font-size: 0.7rem;
+}
+.m-section {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.6rem;
+  color: #c8b0f0;
+  letter-spacing: 2px;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(58,40,16,0.2);
+  display: flex; align-items: center; gap: 8px;
+}
+.m-section::before { content: '§'; color: var(--gold); font-size: 0.75rem; }
+.m-body {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.88rem;
+  color: #c8b0f0;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  text-align: justify;
+}
+.review-block {
+  border-left: 2px solid var(--sepia);
+  padding: 0.55rem 0.7rem;
+  margin-bottom: 0.55rem;
+  border-radius: 0 2px 2px 0;
+  background: rgba(40,20,80,0.08);
+}
+.review-block.g{border-color:var(--gold)}.review-block.s{border-color:#c090e8}.review-block.v{border-color:#7dd888}.review-block.r4{border-color:var(--crimson2)}
+.rb-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.25rem;
+}
+.rb-name.g{color:var(--gold)}.rb-name.s{color:#9060b8}.rb-name.v{color:var(--sage2)}.rb-name.r4{color:var(--crimson2)}
+.rb-text { font-family: 'IM Fell English', serif; font-size: 0.85rem; color: #c8b0f0; line-height: 1.65; }
+
+.verdict-block {
+  border: 2px solid var(--crimson2);
+  border-radius: 2px;
+  padding: 1.2rem;
+  text-align: center;
+  margin-top: 1rem;
+  background: rgba(80,20,140,0.08);
+  position: relative; overflow: hidden;
+}
+.verdict-block.accepted { border-color: var(--sage2); background: rgba(20,80,50,0.08); }
+.verdict-block::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(100,40,180,0.02) 12px, rgba(100,40,180,0.02) 13px);
+}
+.verdict-stamp {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(0.9rem,3.5vw,1.6rem);
+  font-weight: 700;
+  color: var(--crimson2);
+  letter-spacing: 3px;
+  transform: rotate(-2deg);
+  display: inline-block;
+  border: 3px solid var(--crimson2);
+  padding: 0.2rem 0.7rem;
+  opacity: 0.85;
+  text-shadow: 1px 1px 0 rgba(122,26,26,0.3);
+}
+.verdict-stamp.accepted { color: var(--sage2); border-color: var(--sage2); transform: rotate(-1deg); }
+.verdict-reason { font-family: 'IM Fell English', serif; font-style: italic; font-size: 0.85rem; color: #c8b0f0; margin-top: 0.7rem; line-height: 1.65; position: relative; }
+.teapot-notice {
+  margin-top: 1rem;
+  border: 1px solid var(--indigo3);
+  border-radius: 2px;
+  padding: 0.7rem;
+  background: rgba(26,31,74,0.05);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.68rem;
+  color: var(--indigo3);
+  line-height: 1.8;
+}
+.teapot-notice .code {
+  background: var(--ink);
+  color: #7dd888;
+  padding: 0.35rem;
+  border-radius: 2px;
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.62rem;
+}
+
+/* ══════════════════════════════════════════════
+   LOADING SCREEN
+══════════════════════════════════════════════ */
+.loading-screen {
+  position: fixed; inset: 0;
+  background: rgba(10,4,25,0.95);
+  display: none; align-items: center; justify-content: center;
+  z-index: 2000; flex-direction: column; gap: 0.9rem;
+  backdrop-filter: blur(6px);
+}
 .loading-screen.open { display: flex; }
-.loading-crystal { font-size: 3rem; animation: crystal-spin 2s linear infinite; }
-@keyframes crystal-spin { 0%{transform:rotateY(0deg) scale(1);filter:drop-shadow(0 0 10px #d4a84388)}50%{transform:rotateY(180deg) scale(1.1);filter:drop-shadow(0 0 20px #d4a843cc)}100%{transform:rotateY(360deg) scale(1);filter:drop-shadow(0 0 10px #d4a84388)} }
-.loading-title { font-family: 'Cinzel',serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 4px; animation: title-pulse 1.5s infinite; }
-.loading-sub { font-size: 0.65rem; color: var(--text3); letter-spacing: 3px; }
-.loading-steps { display: flex; flex-direction: column; gap: 0.4rem; width: 300px; margin-top: 0.5rem; }
-.ls { font-size: 0.65rem; color: var(--text3); display: flex; gap: 0.6rem; align-items: center; transition: color 0.3s; }
-.ls::before{content:'[ ]';color:var(--border2);min-width:24px}
-.ls.done{color:var(--green2)}.ls.done::before{content:'[✓]';color:var(--green2)}
-.ls.active{color:var(--gold)}.ls.active::before{content:'[~]';color:var(--gold);animation:blink 0.8s infinite}
+.loading-crystal { font-size: 2.5rem; animation: crystal-spin 3s ease-in-out infinite; }
+@keyframes crystal-spin {
+  0%{transform:rotateY(0deg) scale(1);filter:drop-shadow(0 0 8px rgba(150,80,255,0.55))}
+  50%{transform:rotateY(180deg) scale(1.08);filter:drop-shadow(0 0 18px rgba(200,146,10,0.8))}
+  100%{transform:rotateY(360deg) scale(1);filter:drop-shadow(0 0 8px rgba(150,80,255,0.55))}
+}
+.loading-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 4px;
+  animation: title-breathe 2s infinite;
+}
+.loading-sub { font-family: 'Courier Prime', monospace; font-size: 0.6rem; color: var(--sepia3); letter-spacing: 3px; }
+.loading-steps { display: flex; flex-direction: column; gap: 0.35rem; width: 320px; margin-top: 0.3rem; }
+.ls { font-family: 'Courier Prime', monospace; font-size: 0.62rem; color: var(--sepia3); display: flex; gap: 0.6rem; align-items: center; transition: color 0.3s; }
+.ls::before{content:'[ ]';color:rgba(150,80,255,0.35);min-width:24px}
+.ls.done{color:#7dd888}.ls.done::before{content:'[✓]';color:#7dd888}
+.ls.active{color:var(--gold2)}.ls.active::before{content:'[~]';color:var(--gold2);animation:blink 0.8s infinite}
 
-/* TOAST */
-.toast-wrap { position: fixed; bottom: 240px; left: 50%; transform: translateX(-50%); z-index: 3000; pointer-events: none; display: flex; flex-direction: column; gap: 0.4rem; align-items: center; }
-.toast { background: var(--bg2); border: 1px solid var(--gold); color: var(--gold); font-size: 0.7rem; padding: 0.4rem 1rem; border-radius: 20px; letter-spacing: 1px; opacity: 0; transform: translateY(10px) scale(0.95); transition: all 0.3s; box-shadow: 0 0 12px #d4a84333; white-space: nowrap; }
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+.toast-wrap {
+  position: fixed; bottom: 20px;
+  left: 50%; transform: translateX(-50%);
+  z-index: 3000; pointer-events: none;
+  display: flex; flex-direction: column; gap: 0.35rem; align-items: center;
+}
+.toast {
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  color: var(--gold2);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.68rem;
+  padding: 0.38rem 0.9rem;
+  border-radius: 2px;
+  letter-spacing: 0.8px;
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(20,5,50,0.55);
+  white-space: nowrap;
+}
 .toast.show{opacity:1;transform:translateY(0) scale(1)}
-.toast.warn{border-color:var(--red3);color:var(--red3);box-shadow:0 0 12px #cc222233}
-.toast.info{border-color:var(--blue2);color:var(--blue2);box-shadow:0 0 12px #4488ff33}
+.toast.warn{border-color:var(--crimson2);color:#e07070}
+.toast.info{border-color:var(--indigo3);color:#9aacee}
 
 /* SCROLLBAR */
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
+::-webkit-scrollbar-thumb{background:var(--sepia);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--gold)}
 
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
 @media(max-width:768px){
   .app-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto}
-  .palette{max-height:130px;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .palette{max-height:130px;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border-ink)}
   .palette-scroll{display:flex;gap:4px;padding:0.5rem;flex-direction:row;overflow-x:auto}
   .palette-section-label{display:none}
   .tile-option{min-width:100px}
-  .stats-panel{border-left:none;border-top:1px solid var(--border);max-height:200px;flex-direction:row}
+  .stats-panel{border-left:none;border-top:1px solid var(--border-ink);max-height:200px;flex-direction:row}
   .stats-scroll{display:flex;gap:0.5rem;flex-direction:row;overflow-x:auto}
   .m-card{min-width:120px;flex-shrink:0}
   .chat-section{left:0;right:0;height:180px}
-  #dungeon-grid{grid-template-columns:repeat(8,42px);grid-template-rows:repeat(6,42px)}
-  .g-cell{width:42px;height:42px}
+  #dungeon-grid{grid-template-columns:repeat(8,40px);grid-template-rows:repeat(6,40px)}
+  .g-cell{width:40px;height:40px}
 }
 </style>
 </head>
@@ -283,14 +968,23 @@ body {
 
 <!-- HEADER -->
 <div class="header">
-  <div class="header-top-line">⚔ SUBTERRANEAN HAZARD RESEARCH DIVISION ⚔</div>
-  <div class="journal-name">
-    <span class="journal-skull">💀</span>DUNGEON LAB<span class="journal-skull">💀</span>
-  </div>
-  <div class="journal-sub">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
-  <div class="journal-meta">VOL. 47 · EST. 1347 AD · ISSN 1347-DOOM · IMPACT FACTOR: 0.003 · PEER REVIEWED (MOSTLY)</div>
-  <div class="header-bars">
-    <div class="header-bar"></div><div class="header-bar gold"></div><div class="header-bar"></div>
+  <div class="header-inner">
+    <div class="corner-bl"></div><div class="corner-br"></div>
+    <div class="header-vol">⚔ Subterranean Hazard Research Division · Est. MCCCXLVII ⚔</div>
+    <div class="journal-name">
+      <span class="header-ornament">⸻</span>DUNGEON LAB<span class="header-ornament">⸻</span>
+    </div>
+    <div class="journal-sub">Journal of Applied Dungeoneering &amp; Subterranean Hazard Studies</div>
+    <div class="journal-meta">VOL. XLVII · ANNO DOMINI 1347 · ISSN 1347-DOOM · IMPACT FACTOR: 0.003 · THRICE PEER REVIEWED (MOSTLY)</div>
+    <div class="header-rule">
+      <div class="h-rule-line"></div>
+      <div class="h-rule-diamond"></div>
+      <div class="h-rule-line gold"></div>
+      <div class="h-rule-diamond"></div>
+      <div class="h-rule-line gold"></div>
+      <div class="h-rule-diamond"></div>
+      <div class="h-rule-line"></div>
+    </div>
   </div>
 </div>
 
@@ -301,8 +995,18 @@ body {
     <div class="status-dot"></div>
     <span id="api-pill-text">Connecting to backend...</span>
   </div>
-  <span class="sb-label" style="margin-left:0.5rem">Powered by Gemini 2.0 Flash</span>
+  <span class="sb-label" style="margin-left:0.4rem;color:rgba(160,170,220,0.6)">Powered by Gemini 2.0 Flash</span>
   <span class="teapot-418">🫖 /brew → HTTP 418 I'm a Teapot (RFC 2324)</span>
+</div>
+
+
+<!-- API KEY BAR -->
+<div style="background:#0e0820;border-bottom:1px solid rgba(140,70,255,0.25);padding:0.4rem 1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+  <span style="font-family:'Courier Prime',monospace;font-size:0.6rem;color:rgba(180,140,255,0.7);letter-spacing:2px;white-space:nowrap;">🔑 GEMINI KEY (optional):</span>
+  <input type="password" id="api-key-direct" placeholder="Paste Gemini API key here for live AI reviewers → aistudio.google.com" 
+    style="flex:1;min-width:200px;background:rgba(20,10,40,0.8);border:1px solid rgba(140,70,255,0.35);color:#d8c8f8;font-family:'Courier Prime',monospace;font-size:0.72rem;padding:0.32rem 0.75rem;border-radius:2px;outline:none;"
+    oninput="onDirectKey()"/>
+  <span id="direct-key-status" style="font-size:0.6rem;color:rgba(140,70,200,0.6);white-space:nowrap;">Using backend if available</span>
 </div>
 
 <!-- MAIN APP -->
@@ -310,35 +1014,35 @@ body {
 
   <!-- PALETTE -->
   <div class="palette">
-    <div class="palette-header">🏰 TILE PALETTE</div>
+    <div class="palette-header">🏰 Tile Palette</div>
     <div class="palette-scroll" id="palette-scroll">
-      <div class="palette-section-label">ROOMS</div>
-      <div class="tile-option" id="tp-entrance" onclick="pick('entrance','🚪','Dungeon Entrance','room')"><span class="t-emoji">🚪</span><div class="t-info"><div class="t-name">Entrance</div><div class="t-tag">start point</div></div></div>
+      <div class="palette-section-label">Chambers &amp; Rooms</div>
+      <div class="tile-option" id="tp-entrance" onclick="pick('entrance','🚪','Dungeon Entrance','room')"><span class="t-emoji">🚪</span><div class="t-info"><div class="t-name">Entrance</div><div class="t-tag">primary ingress</div></div></div>
       <div class="tile-option" id="tp-throne" onclick="pick('throne','👑','Throne Room','room')"><span class="t-emoji">👑</span><div class="t-info"><div class="t-name">Throne Room</div><div class="t-tag">prestige +40</div></div></div>
-      <div class="tile-option" id="tp-library" onclick="pick('library','📚','Dark Library','room')"><span class="t-emoji">📚</span><div class="t-info"><div class="t-name">Dark Library</div><div class="t-tag">lore +vibes</div></div></div>
+      <div class="tile-option" id="tp-library" onclick="pick('library','📚','Dark Library','room')"><span class="t-emoji">📚</span><div class="t-info"><div class="t-name">Dark Library</div><div class="t-tag">lore coefficient ++</div></div></div>
       <div class="tile-option" id="tp-treasury" onclick="pick('treasury','💰','Treasury','room')"><span class="t-emoji">💰</span><div class="t-info"><div class="t-name">Treasury</div></div><span class="t-badge special">LOOT</span></div>
-      <div class="tile-option" id="tp-barracks" onclick="pick('barracks','🛡️','Barracks','room')"><span class="t-emoji">🛡️</span><div class="t-info"><div class="t-name">Barracks</div><div class="t-tag">minion lodging</div></div></div>
+      <div class="tile-option" id="tp-barracks" onclick="pick('barracks','🛡️','Barracks','room')"><span class="t-emoji">🛡️</span><div class="t-info"><div class="t-name">Barracks</div><div class="t-tag">minion domicile</div></div></div>
 
-      <div class="palette-section-label">TRAPS & HAZARDS</div>
-      <div class="tile-option" id="tp-lava" onclick="pick('lava','🌋','Lava Pit','trap')"><span class="t-emoji">🌋</span><div class="t-info"><div class="t-name">Lava Pit</div><div class="t-tag">very warm</div></div><span class="t-badge danger">HOT</span></div>
-      <div class="tile-option" id="tp-spikes" onclick="pick('spikes','⚡','Spike Trap','trap')"><span class="t-emoji">⚡</span><div class="t-info"><div class="t-name">Spike Trap</div><div class="t-tag">pointy</div></div><span class="t-badge danger">OSHA</span></div>
-      <div class="tile-option" id="tp-pit" onclick="pick('pit','🕳️','Bottomless Pit','trap')"><span class="t-emoji">🕳️</span><div class="t-info"><div class="t-name">Bottomless Pit</div><div class="t-tag">no bottom</div></div></div>
-      <div class="tile-option" id="tp-poison" onclick="pick('poison','☠️','Poison Gas','trap')"><span class="t-emoji">☠️</span><div class="t-info"><div class="t-name">Poison Gas</div><div class="t-tag">EPA violation</div></div><span class="t-badge danger">EPA</span></div>
+      <div class="palette-section-label">Traps &amp; Hazards</div>
+      <div class="tile-option" id="tp-lava" onclick="pick('lava','🌋','Lava Pit','trap')"><span class="t-emoji">🌋</span><div class="t-info"><div class="t-name">Lava Pit</div><div class="t-tag">thermally extreme</div></div><span class="t-badge danger">HOT</span></div>
+      <div class="tile-option" id="tp-spikes" onclick="pick('spikes','⚡','Spike Trap','trap')"><span class="t-emoji">⚡</span><div class="t-info"><div class="t-name">Spike Trap</div><div class="t-tag">acutely pointy</div></div><span class="t-badge danger">OSHA</span></div>
+      <div class="tile-option" id="tp-pit" onclick="pick('pit','🕳️','Bottomless Pit','trap')"><span class="t-emoji">🕳️</span><div class="t-info"><div class="t-name">Bottomless Pit</div><div class="t-tag">depth: ∞</div></div></div>
+      <div class="tile-option" id="tp-poison" onclick="pick('poison','☠️','Poison Gas','trap')"><span class="t-emoji">☠️</span><div class="t-info"><div class="t-name">Poison Gas</div><div class="t-tag">EPA violation §4</div></div><span class="t-badge danger">EPA</span></div>
 
-      <div class="palette-section-label">MONSTERS</div>
-      <div class="tile-option" id="tp-goblin" onclick="pick('goblin','👺','Goblin Nest','monster')"><span class="t-emoji">👺</span><div class="t-info"><div class="t-name">Goblin Nest</div><div class="t-tag">union member</div></div></div>
-      <div class="tile-option" id="tp-dragon" onclick="pick('dragon','🐉','Dragon Lair','monster')"><span class="t-emoji">🐉</span><div class="t-info"><div class="t-name">Dragon Lair</div><div class="t-tag">carbon ++</div></div><span class="t-badge danger">CO₂</span></div>
-      <div class="tile-option" id="tp-skeleton" onclick="pick('skeleton','💀','Skeleton Army','monster')"><span class="t-emoji">💀</span><div class="t-info"><div class="t-name">Skeleton Army</div><div class="t-tag">no benefits</div></div></div>
-      <div class="tile-option" id="tp-beholder" onclick="pick('beholder','👁️','Beholder Den','monster')"><span class="t-emoji">👁️</span><div class="t-info"><div class="t-name">Beholder Den</div><div class="t-tag">staring contest</div></div></div>
-      <div class="tile-option" id="tp-troll" onclick="pick('troll','🧌','Troll Bridge','monster')"><span class="t-emoji">🧌</span><div class="t-info"><div class="t-name">Troll Bridge</div><div class="t-tag">asks riddles</div></div></div>
+      <div class="palette-section-label">Fauna &amp; Monsters</div>
+      <div class="tile-option" id="tp-goblin" onclick="pick('goblin','👺','Goblin Nest','monster')"><span class="t-emoji">👺</span><div class="t-info"><div class="t-name">Goblin Nest</div><div class="t-tag">unionised</div></div></div>
+      <div class="tile-option" id="tp-dragon" onclick="pick('dragon','🐉','Dragon Lair','monster')"><span class="t-emoji">🐉</span><div class="t-info"><div class="t-name">Dragon Lair</div><div class="t-tag">carbon footprint ++</div></div><span class="t-badge danger">CO₂</span></div>
+      <div class="tile-option" id="tp-skeleton" onclick="pick('skeleton','💀','Skeleton Army','monster')"><span class="t-emoji">💀</span><div class="t-info"><div class="t-name">Skeleton Army</div><div class="t-tag">no benefits pkg.</div></div></div>
+      <div class="tile-option" id="tp-beholder" onclick="pick('beholder','👁️','Beholder Den','monster')"><span class="t-emoji">👁️</span><div class="t-info"><div class="t-name">Beholder Den</div><div class="t-tag">sustained ocular contact</div></div></div>
+      <div class="tile-option" id="tp-troll" onclick="pick('troll','🧌','Troll Bridge','monster')"><span class="t-emoji">🧌</span><div class="t-info"><div class="t-name">Troll Bridge</div><div class="t-tag">riddle-based toll</div></div></div>
 
-      <div class="palette-section-label">SPECIAL</div>
+      <div class="palette-section-label">Arcana &amp; Artefacts</div>
       <div class="tile-option" id="tp-magic" onclick="pick('magic','🔮','Magic Portal','special')"><span class="t-emoji">🔮</span><div class="t-info"><div class="t-name">Magic Portal</div></div><span class="t-badge magic">ARCANE</span></div>
       <div class="tile-option" id="tp-boss" onclick="pick('boss','😈','Boss Chamber','special')"><span class="t-emoji">😈</span><div class="t-info"><div class="t-name">Boss Chamber</div></div><span class="t-badge danger">FINAL</span></div>
       <div class="tile-option" id="tp-teapot" onclick="pick('teapot','🫖','Teapot Room','special')"><span class="t-emoji">🫖</span><div class="t-info"><div class="t-name">Teapot Room</div><div class="t-tag">RFC 2324</div></div><span class="t-badge magic">418</span></div>
       <div class="tile-option" id="tp-altar" onclick="pick('altar','🗿','Dark Altar','special')"><span class="t-emoji">🗿</span><div class="t-info"><div class="t-name">Dark Altar</div><div class="t-tag">vibes +++</div></div><span class="t-badge special">EVIL</span></div>
 
-      <div class="palette-section-label">INFRASTRUCTURE</div>
+      <div class="palette-section-label">Infrastructure</div>
       <div class="tile-option" id="tp-corridor" onclick="pick('corridor','🟫','Corridor','infra')"><span class="t-emoji">🟫</span><div class="t-info"><div class="t-name">Corridor</div><div class="t-tag">fire code §47</div></div></div>
       <div class="tile-option" id="tp-wall" onclick="pick('wall','🧱','Wall','infra')"><span class="t-emoji">🧱</span><div class="t-info"><div class="t-name">Reinforced Wall</div><div class="t-tag">load-bearing</div></div></div>
     </div>
@@ -347,70 +1051,47 @@ body {
   <!-- GRID -->
   <div class="grid-area">
     <div class="grid-toolbar">
-      <button class="tb-btn active" id="btn-place" onclick="setMode('place')">✏ PLACE</button>
-      <button class="tb-btn" id="btn-erase" onclick="setMode('erase')">🗑 ERASE</button>
-      <button class="tb-btn clear" onclick="clearAll()">⚠ CLEAR DUNGEON</button>
-      <button class="publish-btn" onclick="submitPeerReview()">📜 SUBMIT FOR PEER REVIEW</button>
-      <span class="selected-label">Selected: <span id="sel-label">— pick a tile</span></span>
+      <button class="tb-btn active" id="btn-place" onclick="setMode('place')">✏ Place</button>
+      <button class="tb-btn" id="btn-erase" onclick="setMode('erase')">⌫ Erase</button>
+      <button class="tb-btn clear" onclick="clearAll()">⚠ Clear Dungeon</button>
+      <button class="publish-btn" onclick="submitPeerReview()">📜 Submit for Peer Review</button>
+      <span class="selected-label">Selected: <span id="sel-label">— choose a tile</span></span>
     </div>
     <div class="grid-viewport">
-      <div id="dungeon-grid"></div>
+      <div class="grid-frame">
+        <div class="grid-label north">NORTH</div>
+        <div class="grid-label south">SOUTH</div>
+        <div class="grid-label east">EAST</div>
+        <div class="grid-label west">WEST</div>
+        <div id="dungeon-grid"></div>
+      </div>
     </div>
   </div>
 
   <!-- STATS -->
   <div class="stats-panel">
     <div class="stats-header">
-      📊 LIVE METRICS
-      <div class="stats-live"><div class="stats-live-dot"></div> REAL-TIME</div>
+      📊 Live Metrics
+      <div class="stats-live"><div class="stats-live-dot"></div><div class="stats-live-text">REAL-TIME</div></div>
     </div>
     <div class="stats-scroll">
       <div class="osha-alert" id="osha">⚠ AWAITING DUNGEON DATA — Place tiles to begin analysis</div>
-      <div class="m-card danger" id="mc-mort"><div class="m-label">HERO MORTALITY PROB.</div><div class="m-value red" id="mv-mort">0.00%</div><div class="m-bar-bg"><div class="m-bar red" id="mb-mort" style="width:0%"></div></div><div class="m-note" id="mn-mort">No hazards. Heroes feel safe. Embarrassing.</div></div>
-      <div class="m-card magic" id="mc-vibes"><div class="m-label">DUNGEON AMBIANCE (VIBES/m²)</div><div class="m-value purple" id="mv-vibes">0.0</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-vibes" style="width:0%"></div></div><div class="m-note" id="mn-vibes">Currently identical to a parking garage.</div></div>
-      <div class="m-card" id="mc-evil"><div class="m-label">EVIL DENSITY (evil/ft²)</div><div class="m-value" id="mv-evil">0.000</div><div class="m-bar-bg"><div class="m-bar" id="mb-evil" style="width:0%"></div></div><div class="m-note" id="mn-evil">Min. required: 0.42/ft² (Municipal Code §666)</div></div>
-      <div class="m-card safe" id="mc-goblin"><div class="m-label">GOBLIN WELLBEING INDEX</div><div class="m-value green" id="mv-goblin">N/A</div><div class="m-bar-bg"><div class="m-bar green" id="mb-goblin" style="width:0%"></div></div><div class="m-note" id="mn-goblin">No goblins. Union psychologists idle (still paid).</div></div>
-      <div class="m-card" id="mc-co2"><div class="m-label">LAVA CARBON FOOTPRINT</div><div class="m-value" id="mv-co2">0 Mt/yr</div><div class="m-bar-bg"><div class="m-bar" id="mb-co2" style="width:0%"></div></div><div class="m-note" id="mn-co2">Carbon neutral. Shamefully eco-friendly.</div></div>
-      <div class="m-card" id="mc-trap"><div class="m-label">TRAP DENSITY (OSHA §47-D)</div><div class="m-value" id="mv-trap">0.0 /room</div><div class="m-bar-bg"><div class="m-bar" id="mb-trap" style="width:0%"></div></div><div class="m-note" id="mn-trap">Standard: 2.7/room (Tomb of Horrors, 1978)</div></div>
-      <div class="m-card magic" id="mc-mana"><div class="m-label">ARCANE COMPLEXITY (mana-hrs)</div><div class="m-value purple" id="mv-mana">0 mh</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-mana" style="width:0%"></div></div><div class="m-note" id="mn-mana">Requires portal for non-zero reading.</div></div>
+      <div class="m-card danger" id="mc-mort"><div class="m-label">Hero Mortality Prob.</div><div class="m-value red" id="mv-mort">0.00%</div><div class="m-bar-bg"><div class="m-bar red" id="mb-mort" style="width:0%"></div></div><div class="m-note" id="mn-mort">No hazards. Heroes feel safe. Embarrassing.</div></div>
+      <div class="m-card magic" id="mc-vibes"><div class="m-label">Dungeon Ambiance (Vibes/m²)</div><div class="m-value purple" id="mv-vibes">0.0</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-vibes" style="width:0%"></div></div><div class="m-note" id="mn-vibes">Currently identical to a parking garage.</div></div>
+      <div class="m-card" id="mc-evil"><div class="m-label">Evil Density (evil/ft²)</div><div class="m-value" id="mv-evil">0.000</div><div class="m-bar-bg"><div class="m-bar" id="mb-evil" style="width:0%"></div></div><div class="m-note" id="mn-evil">Min. required: 0.42/ft² (Municipal Code §666)</div></div>
+      <div class="m-card safe" id="mc-goblin"><div class="m-label">Goblin Wellbeing Index</div><div class="m-value green" id="mv-goblin">N/A</div><div class="m-bar-bg"><div class="m-bar green" id="mb-goblin" style="width:0%"></div></div><div class="m-note" id="mn-goblin">No goblins. Union psychologists idle (still paid).</div></div>
+      <div class="m-card" id="mc-co2"><div class="m-label">Lava Carbon Footprint</div><div class="m-value" id="mv-co2">0 Mt/yr</div><div class="m-bar-bg"><div class="m-bar" id="mb-co2" style="width:0%"></div></div><div class="m-note" id="mn-co2">Carbon neutral. Shamefully eco-friendly.</div></div>
+      <div class="m-card" id="mc-trap"><div class="m-label">Trap Density (OSHA §47-D)</div><div class="m-value" id="mv-trap">0.0 /room</div><div class="m-bar-bg"><div class="m-bar" id="mb-trap" style="width:0%"></div></div><div class="m-note" id="mn-trap">Standard: 2.7/room (Tomb of Horrors, 1978)</div></div>
+      <div class="m-card magic" id="mc-mana"><div class="m-label">Arcane Complexity (mana-hrs)</div><div class="m-value purple" id="mv-mana">0 mh</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-mana" style="width:0%"></div></div><div class="m-note" id="mn-mana">Requires portal for non-zero reading.</div></div>
     </div>
   </div>
 
 </div><!-- end app-wrap -->
 
-<!-- CHAT -->
-<div class="chat-section">
-  <div class="chat-header-bar">
-    <span class="chat-title">🔬 LIVE PEER REVIEW PANEL — Powered by Gemini 2.0 Flash</span>
-    <div class="chat-indicators">
-      <div class="reviewer-pill" id="pill-grimm">🧙 Grimm</div>
-      <div class="reviewer-pill" id="pill-skull">💀 Skullvane</div>
-      <div class="reviewer-pill" id="pill-voss">⚗️ Voss</div>
-      <div class="reviewer-pill" id="pill-r4">🗡️ #4 [MUTED]</div>
-    </div>
-  </div>
-  <div class="chat-messages" id="chat-messages">
-    <div class="chat-msg">
-      <div class="c-av sys">📋</div>
-      <div class="c-body">
-        <div class="c-who"><span class="name">SESSION MODERATOR</span></div>
-        <div class="c-text">Panel convened. Connecting to Gemini-powered reviewer cluster... Reviewer #4 has already complained about the chairs.</div>
-      </div>
-    </div>
-    <div class="chat-msg">
-      <div class="c-av r4">🗡️</div>
-      <div class="c-body">
-        <div class="c-who"><span class="name r">REVIEWER #4</span><span class="role">· anonymous · clearly a villain</span></div>
-        <div class="c-text">mid.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-box">
-    <button class="modal-close-btn" onclick="closeModal()">✕ CLOSE</button>
+    <button class="modal-close-btn" onclick="closeModal()">✕ Close</button>
     <div id="modal-content"></div>
   </div>
 </div>
@@ -418,7 +1099,7 @@ body {
 <!-- LOADING -->
 <div class="loading-screen" id="loading-screen">
   <div class="loading-crystal">🔮</div>
-  <div class="loading-title">CONVENING PEER REVIEWERS</div>
+  <div class="loading-title">Convening Peer Reviewers</div>
   <div class="loading-sub">GEMINI IS ARGUING WITH ITSELF. PLEASE WAIT.</div>
   <div class="loading-steps">
     <div class="ls" id="ls0">Scanning dungeon topology</div>
@@ -434,8 +1115,6 @@ body {
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────
-// Change this to your deployed Render backend URL before deploying!
-// For local dev: 'http://localhost:3001'
 const BACKEND = 'https://dungeon-lab-backend.onrender.com';
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -451,26 +1130,26 @@ let backendOnline = false;
 // ── BACKGROUND FX ──────────────────────────────────────────────
 function initBg() {
   const bg = document.getElementById('bg-layer');
-  const runes = ['⚔','🗡','💀','🔮','⚗','🕯','🦇','🐍','💎','🧿','⚡','🌙'];
-  for (let i = 0; i < 18; i++) {
+  const runes = ['⚔','🗡','💀','🔮','⚗','🕯','🦇','🐍','💎','🧿','⚡','🌙','📜','⚖','🏺'];
+  for (let i = 0; i < 14; i++) {
     const el = document.createElement('div');
     el.className = 'bg-rune';
     el.textContent = runes[Math.floor(Math.random() * runes.length)];
     el.style.left = Math.random() * 100 + '%';
-    el.style.animationDuration = (12 + Math.random() * 20) + 's';
-    el.style.animationDelay = (Math.random() * 15) + 's';
+    el.style.animationDuration = (16 + Math.random() * 24) + 's';
+    el.style.animationDelay = (Math.random() * 20) + 's';
     bg.appendChild(el);
   }
-  function spawnEmber() {
-    const e = document.createElement('div'); e.className = 'ember';
-    e.style.left = (10 + Math.random() * 80) + '%';
+  function spawnDot() {
+    const e = document.createElement('div'); e.className = 'ink-dot';
+    e.style.left = (5 + Math.random() * 90) + '%';
     e.style.bottom = '0';
-    e.style.setProperty('--dx', (Math.random() * 40 - 20) + 'px');
-    e.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    e.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
+    e.style.animationDuration = (2 + Math.random() * 3) + 's';
     bg.appendChild(e);
-    setTimeout(() => e.remove(), 4000);
+    setTimeout(() => e.remove(), 5000);
   }
-  setInterval(spawnEmber, 300);
+  setInterval(spawnDot, 600);
 }
 
 // ── BACKEND PING ───────────────────────────────────────────────
@@ -481,12 +1160,12 @@ async function pingBackend() {
     backendOnline = true;
     document.getElementById('api-pill').className = 'api-status-pill ok';
     document.getElementById('api-pill-text').textContent = 'Reviewers ONLINE (Gemini)';
-    addMsg('sys','📋','sys','SESSION MODERATOR',null,'<em>✓ Gemini reviewer cluster connected. Reviewers are already bickering about dungeon methodology.</em>');
+    addMsg('sys','📋','sys','Session Moderator',null,'<em>✓ Gemini reviewer cluster connected. Reviewers are already bickering about dungeon methodology.</em>');
   } catch(e) {
     backendOnline = false;
     document.getElementById('api-pill').className = 'api-status-pill err';
     document.getElementById('api-pill-text').textContent = 'Backend offline — static mode';
-    addMsg('sys','📋','sys','SESSION MODERATOR',null,'Backend unreachable. Reviewers working from memory (badly). Place tiles to begin static analysis.');
+    addMsg('sys','📋','sys','Session Moderator',null,'Backend unreachable. Reviewers working from memory (badly). Place tiles to begin static analysis.');
   }
 }
 
@@ -536,7 +1215,7 @@ function placeCell(r, c) {
   updateMetrics();
   if (selected.id === 'teapot') {
     toast('☕ 418 I\'m a Teapot! RFC 2324 activated.', 'info');
-    addMsg('sys','📋','sys','SESSION MODERATOR',null,'<em>🫖 ALERT: Teapot Room placed. This dungeon now returns HTTP 418 I\'m a Teapot to all brew requests. Larry Masinter has been cc\'d. Try GET /brew on the backend.</em>');
+    addMsg('sys','📋','sys','Session Moderator',null,'<em>🫖 ALERT: Teapot Room placed. This dungeon now returns HTTP 418 I\'m a Teapot to all brew requests. Larry Masinter has been cc\'d. Try GET /brew on the backend.</em>');
   }
   triggerReviewer(selected);
 }
@@ -576,7 +1255,7 @@ function clearAll() {
   initGrid();
   updateMetrics();
   toast('🗑 Dungeon cleared. Goblins filing for unemployment.', 'warn');
-  addMsg('sys','📋','sys','SESSION MODERATOR',null,'Dungeon cleared. Reviewers disappointed. Reviewer #4: "mid."');
+  addMsg('sys','📋','sys','Session Moderator',null,'Dungeon cleared. Reviewers disappointed. Reviewer #4: "mid."');
 }
 
 // ── METRICS ────────────────────────────────────────────────────
@@ -656,9 +1335,9 @@ function removeTyping(type,pillId){
 
 // ── REVIEWER (via backend) ─────────────────────────────────────
 const reviewers=[
-  {type:'grimm',icon:'🧙',pill:'pill-grimm',name:'PROF. ALDRIC GRIMM',nc:'g',key:'grimm'},
-  {type:'skull',icon:'💀',pill:'pill-skull',name:'DR. SKULLVANE',nc:'s',key:'skullvane'},
-  {type:'voss',icon:'⚗️',pill:'pill-voss',name:'DR. LENA VOSS',nc:'v',key:'voss'},
+  {type:'grimm',icon:'🧙',pill:'pill-grimm',name:'Prof. Aldric Grimm',nc:'g',key:'grimm'},
+  {type:'skull',icon:'💀',pill:'pill-skull',name:'Dr. Skullvane',nc:'s',key:'skullvane'},
+  {type:'voss',icon:'⚗️',pill:'pill-voss',name:'Dr. Lena Voss',nc:'v',key:'voss'},
 ];
 
 async function triggerReviewer(tile){
@@ -673,7 +1352,7 @@ async function triggerReviewer(tile){
   showTyping(rev.type,rev.icon,rev.pill);
 
   try{
-    const r=await fetch(BACKEND+'/api/reviewer',{
+    const r= directGeminiKey.length>20 ? await directGeminiCall(tile,summary,rev) : await fetch(BACKEND+'/api/reviewer',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({tile,dungeonSummary:summary,reviewer:rev.key})
     });
@@ -727,7 +1406,7 @@ function buildReport(r,hasTeapot){
   const verdictText={ACCEPT:'✓ ACCEPTED',MINOR_REVISION:'~ MINOR REVISION',MAJOR_REVISION:'⚠ MAJOR REVISION',DESK_REJECT:'✕ DESK REJECTED'}[r.verdict]||'✕ REJECTED';
   const doi='10.1347/jadsh.'+Date.now().toString(36).toUpperCase();
   return `
-    <div class="m-journal-name">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
+    <div class="m-journal-name">Journal of Applied Dungeoneering &amp; Subterranean Hazard Studies</div>
     <div class="m-journal-sub">PEER REVIEW DECISION · VOL. 47 · EST. 1347 AD · ISSN 1347-DOOM · Powered by Gemini 2.0 Flash</div>
     <div class="m-paper-title">${r.title||'Untitled Dungeon: A Methodological Catastrophe'}</div>
     <div class="m-authors">Anonymous Dungeon Architect et al. · Received ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
@@ -738,7 +1417,7 @@ function buildReport(r,hasTeapot){
     <div class="m-section">STATISTICAL ANALYSIS</div><div class="m-body">${r.stats}</div>
     <div class="m-section">REVIEWER COMMENTS</div>
     <div class="review-block g"><div class="rb-name g">🧙 PROF. ALDRIC GRIMM · Subterranean Architecture, Ravenspire Univ.</div><div class="rb-text">${r.grimm}</div></div>
-    <div class="review-block s"><div class="rb-name s">💀 DR. SKULLVANE · Monster Behavioral Science, Institute of Applied Evil</div><div class="rb-text">${r.skullvane}</div></div>
+    <div class="review-block s"><div class="rb-name s">💀 DR. SKULLVANE · Monster Behavioural Science, Institute of Applied Evil</div><div class="rb-text">${r.skullvane}</div></div>
     <div class="review-block v"><div class="rb-name v">⚗️ DR. LENA VOSS · Trap Thermodynamics, MIT (Magical Institute of Traps)</div><div class="rb-text">${r.voss}</div></div>
     <div class="review-block r4"><div class="rb-name r4">🗡️ REVIEWER #4 · [MUTED] · [APPEAL PENDING SINCE 1347]</div><div class="rb-text">${r.r4}</div></div>
     <div class="m-section">DUNGEON ETHICAL REVIEW BOARD</div><div class="m-body">${r.erb}</div>
@@ -753,7 +1432,7 @@ function fallbackReport(tiles,hasTeapot){
   const traps=tiles.filter(t=>t.cat==='trap').length;
   const monsters=tiles.filter(t=>t.cat==='monster').length;
   return `
-    <div class="m-journal-name">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
+    <div class="m-journal-name">Journal of Applied Dungeoneering &amp; Subterranean Hazard Studies</div>
     <div class="m-journal-sub">PEER REVIEW DECISION · VOL. 47 · EST. 1347 AD</div>
     <div class="m-paper-title">An Empirical Analysis of a Deeply Questionable Dungeon Configuration</div>
     <div class="m-authors">Anonymous Architect et al. · ${new Date().toLocaleDateString()}</div>
@@ -765,7 +1444,7 @@ function fallbackReport(tiles,hasTeapot){
     <div class="review-block g"><div class="rb-name g">🧙 PROF. GRIMM</div><div class="rb-text">The corridor widths violate every principle established since 1347. I have filed 14 separate complaints. The lava pit lacks a proper drainage coefficient analysis. This is, frankly, an embarrassment to the field.</div></div>
     <div class="review-block r4"><div class="rb-name r4">🗡️ REVIEWER #4 [MUTED]</div><div class="rb-text">mid.</div></div>
     ${hasTeapot?`<div class="teapot-notice">🫖 418 I'm a Teapot — RFC 2324 §2.3.2 compliance confirmed. Larry Masinter notified.<span class="code">HTTP/1.1 418 I'm a Teapot</span></div>`:''}
-    <div class="verdict-block"><div class="verdict-stamp">✕ DESK REJECTED</div><div class="verdict-reason">Rejected without external review. Lacks methodological rigor, proper citations, and a statistically significant lava pit. Please revise and resubmit. We wish you luck. We do not mean this.</div></div>`;
+    <div class="verdict-block"><div class="verdict-stamp">✕ DESK REJECTED</div><div class="verdict-reason">Rejected without external review. Lacks methodological rigour, proper citations, and a statistically significant lava pit. Please revise and resubmit. We wish you luck. We do not mean this.</div></div>`;
 }
 
 // ── MODAL ──────────────────────────────────────────────────────
@@ -796,6 +1475,39 @@ function toast(msg,type=''){
   wrap.appendChild(el);
   setTimeout(()=>el.classList.add('show'),10);
   setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3000);
+}
+
+
+// Direct Gemini key support
+let directGeminiKey = '';
+function onDirectKey() {
+  directGeminiKey = document.getElementById('api-key-direct').value.trim();
+  const status = document.getElementById('direct-key-status');
+  if (directGeminiKey.length > 20) {
+    status.textContent = '✓ Direct key active — reviewers online';
+    status.style.color = '#88ee99';
+    backendOnline = true;
+  } else {
+    status.textContent = 'Using backend if available';
+    status.style.color = 'rgba(140,70,200,0.6)';
+  }
+}
+
+
+async function directGeminiCall(tile, summary, rev) {
+  const personas = {
+    grimm: 'a pompous professor of subterranean architecture obsessed with corridor widths, fire egress, and building codes from 1347.',
+    skullvane: 'a monster behavioral scientist deeply concerned about creature psychological wellbeing. Cites made-up papers on goblin trauma.',
+    voss: 'a trap thermodynamics engineer horrified by inefficient lava placement. References heat equations obsessively.'
+  };
+  const prompt = 'You are '+rev.name+', '+rev.key in personas ? personas[rev.key] : 'a dungeon peer reviewer.'+' React to this dungeon tile in 2-3 sentences with academic pomposity and fake citations. Tile placed: '+tile.emoji+' '+tile.label+'. Current dungeon: '+summary+'. Be funny and absurd. No markdown.';
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+directGeminiKey, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '<em>[Reviewer speechless]</em>';
+  return { json: async () => ({ text }) };
 }
 
 // ── BOOT ───────────────────────────────────────────────────────
