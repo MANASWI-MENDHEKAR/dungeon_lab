@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DUNGEON LAB — Journal of Applied Dungeoneering</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Share+Tech+Mono&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050305;
+  --bg2: #0d090d;
+  --bg3: #140f14;
+  --panel: #0f0b0f;
+  --border: #2a1a2a;
+  --border2: #4a2a4a;
+  --gold: #d4a843;
+  --gold2: #f0c060;
+  --gold3: #fff0a0;
+  --red: #8b0000;
+  --red2: #cc2222;
+  --red3: #ff4444;
+  --green: #1a6b1a;
+  --green2: #22cc44;
+  --blue: #1a3a6b;
+  --blue2: #4488ff;
+  --purple: #4a0a6b;
+  --purple2: #aa44ff;
+  --lava: #ff4500;
+  --lava2: #ff7700;
+  --text: #e8d8c0;
+  --text2: #a08060;
+  --text3: #604030;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG LAYER */
+.bg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bg-rune { position: absolute; font-size: 2rem; opacity: 0.03; animation: float-rune linear infinite; user-select: none; }
+@keyframes float-rune {
+  from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.04; } 90% { opacity: 0.04; }
+  to { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+.ember { position: absolute; width: 3px; height: 3px; background: var(--lava); border-radius: 50%; animation: ember-rise linear infinite; box-shadow: 0 0 4px var(--lava2); }
+@keyframes ember-rise { from { transform: translateY(0) translateX(0); opacity: 1; } to { transform: translateY(-200px) translateX(var(--dx, 20px)); opacity: 0; } }
+
+/* HEADER */
+.header {
+  position: relative; z-index: 10; text-align: center;
+  padding: 1.5rem 1rem 1rem;
+  background: linear-gradient(180deg, #200010 0%, #0d090d 100%);
+  border-bottom: 2px solid var(--border2); overflow: hidden;
+}
+.header::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent, transparent 80px, #ffffff04 80px, #ffffff04 81px); pointer-events: none; }
+.header-top-line { font-size: 0.6rem; color: var(--text3); letter-spacing: 4px; margin-bottom: 0.5rem; animation: flicker 4s infinite; }
+@keyframes flicker { 0%,95%,100%{opacity:1}96%{opacity:0.3}97%{opacity:1}98%{opacity:0.1}99%{opacity:1} }
+.journal-name { font-family: 'Cinzel', serif; font-weight: 900; font-size: clamp(1.6rem,5vw,3.2rem); color: var(--gold); text-shadow: 0 0 20px #d4a84388,0 0 60px #d4a84322; letter-spacing: 4px; line-height: 1; animation: title-pulse 3s ease-in-out infinite; }
+@keyframes title-pulse { 0%,100%{text-shadow:0 0 20px #d4a84388,0 0 60px #d4a84322}50%{text-shadow:0 0 30px #d4a843cc,0 0 80px #d4a84344,0 0 120px #d4a84311} }
+.journal-skull { font-size: 1.5rem; vertical-align: middle; margin: 0 0.5rem; animation: skull-bob 2s ease-in-out infinite; display: inline-block; }
+@keyframes skull-bob { 0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-4px) rotate(5deg)} }
+.journal-sub { font-family: 'Crimson Pro', serif; font-style: italic; font-size: clamp(0.7rem,2vw,0.9rem); color: var(--text2); margin-top: 0.3rem; letter-spacing: 2px; }
+.journal-meta { font-size: 0.6rem; color: var(--text3); margin-top: 0.25rem; letter-spacing: 3px; }
+.header-bars { display: flex; justify-content: center; gap: 3px; margin-top: 0.75rem; }
+.header-bar { width: 40px; height: 2px; background: var(--border2); border-radius: 1px; }
+.header-bar.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold); width: 80px; }
+
+/* STATUS BAR */
+.status-bar {
+  position: relative; z-index: 10;
+  background: #0a050a;
+  border-bottom: 1px solid var(--border);
+  padding: 0.4rem 1rem;
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+.sb-label { font-size: 0.6rem; color: var(--text3); letter-spacing: 2px; }
+.api-status-pill { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); white-space: nowrap; transition: all 0.3s; }
+.api-status-pill.ok { border-color: var(--green2); color: var(--green2); background: #00ff0008; }
+.api-status-pill.err { border-color: var(--red2); color: var(--red2); }
+.api-status-pill.checking { border-color: var(--gold); color: var(--gold); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0.2} }
+.teapot-418 { margin-left: auto; font-size: 0.58rem; color: var(--blue2); opacity: 0.7; letter-spacing: 1px; }
+
+/* MAIN LAYOUT */
+.app-wrap { position: relative; z-index: 10; display: grid; grid-template-columns: 200px 1fr 280px; height: calc(100vh - 148px); min-height: 520px; }
+
+/* PALETTE */
+.palette { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.palette-header { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold); letter-spacing: 3px; }
+.palette-scroll { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.palette-section-label { font-size: 0.55rem; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; padding: 0.5rem 0.25rem 0.3rem; }
+.tile-option { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 4px; cursor: pointer; transition: all 0.2s; background: var(--bg3); position: relative; overflow: hidden; }
+.tile-option::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,transparent,#ffffff08,transparent); transform: translateX(-100%); transition: transform 0.4s; }
+.tile-option:hover::before { transform: translateX(100%); }
+.tile-option:hover { border-color: var(--gold); transform: translateX(2px); }
+.tile-option.active { border-color: var(--gold2); background: #2a1a0a; box-shadow: 0 0 8px #d4a84322,inset 0 0 8px #d4a84311; }
+.tile-option.active::after { content: '▶'; position: absolute; right: 6px; font-size: 0.5rem; color: var(--gold2); }
+.t-emoji { font-size: 1.1rem; width: 1.3rem; text-align: center; flex-shrink: 0; }
+.t-info { flex: 1; min-width: 0; }
+.t-name { font-size: 0.68rem; color: var(--text); line-height: 1; }
+.t-tag { font-size: 0.5rem; color: var(--text3); margin-top: 2px; }
+.t-badge { font-size: 0.5rem; padding: 1px 5px; border-radius: 3px; font-weight: bold; letter-spacing: 0.5px; flex-shrink: 0; }
+.t-badge.danger { background: #8b000033; color: var(--red3); border: 1px solid #8b000088; }
+.t-badge.special { background: #d4a84322; color: var(--gold); border: 1px solid #d4a84344; }
+.t-badge.magic { background: #aa44ff22; color: var(--purple2); border: 1px solid #aa44ff44; }
+
+/* GRID */
+.grid-area { display: flex; flex-direction: column; background: var(--bg); overflow: hidden; position: relative; padding-bottom: 220px; }
+.grid-toolbar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0; }
+.tb-btn { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; padding: 0.3rem 0.7rem; border-radius: 3px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); letter-spacing: 0.5px; }
+.tb-btn:hover { border-color: var(--gold); color: var(--gold); }
+.tb-btn.active { border-color: var(--gold); color: var(--gold); background: #2a1a0a; }
+.tb-btn.clear { color: var(--red3); border-color: #8b000044; }
+.tb-btn.clear:hover { border-color: var(--red3); background: #8b000022; }
+.publish-btn { font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 1rem; border-radius: 3px; cursor: pointer; border: 1px solid var(--gold); background: linear-gradient(135deg,#3a1500,#6b2800); color: var(--gold2); letter-spacing: 2px; position: relative; overflow: hidden; transition: all 0.2s; animation: publish-glow 2s infinite; }
+@keyframes publish-glow { 0%,100%{box-shadow:0 0 6px #d4a84333}50%{box-shadow:0 0 16px #d4a84366,0 0 30px #d4a84322} }
+.publish-btn:hover { background: linear-gradient(135deg,#5a2000,#9b3800); color: var(--gold3); }
+.publish-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,transparent,#ffffff11,transparent); transform: translateX(-100%); animation: shimmer 2s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+.selected-label { margin-left: auto; font-size: 0.65rem; color: var(--text3); white-space: nowrap; }
+.selected-label span { color: var(--gold); }
+
+/* DUNGEON GRID */
+.grid-viewport { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: radial-gradient(ellipse at center,#1a0510 0%,#050305 70%); position: relative; }
+.grid-viewport::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center,transparent 30%,#05030588 100%); pointer-events: none; }
+#dungeon-grid { display: grid; grid-template-columns: repeat(10,52px); grid-template-rows: repeat(8,52px); border: 2px solid var(--border2); box-shadow: 0 0 40px #00000088,0 0 80px #d4a84311,inset 0 0 30px #00000044; position: relative; }
+#dungeon-grid::before { content: ''; position: absolute; inset: -4px; border: 1px solid var(--border); pointer-events: none; }
+.g-cell { width: 52px; height: 52px; border: 0.5px solid #1a0a1a; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: background 0.15s; user-select: none; }
+.g-cell:hover { background: #2a1a2a44; }
+.g-cell.occupied { background: #100810; }
+.g-cell.occupied:hover { background: #180d18; }
+.g-cell .c-emoji { font-size: 1.5rem; line-height: 1; pointer-events: none; transition: transform 0.2s; filter: drop-shadow(0 0 4px #00000088); }
+.g-cell.occupied:hover .c-emoji { transform: scale(1.15); }
+.g-cell .c-del { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: var(--red); color: #fff; font-size: 0.55rem; border-radius: 2px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 5; line-height: 1; }
+.g-cell.occupied:hover .c-del { display: flex; }
+.g-cell.pop { animation: cell-pop 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+@keyframes cell-pop { 0%{transform:scale(0) rotate(-10deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0deg)} }
+.g-cell[data-cat="trap"] .c-emoji { filter: drop-shadow(0 0 6px #ff450066); }
+.g-cell[data-cat="monster"] .c-emoji { filter: drop-shadow(0 0 6px #cc222266); }
+.g-cell[data-cat="special"] .c-emoji { filter: drop-shadow(0 0 6px #aa44ff66); }
+.g-cell[data-cat="room"] .c-emoji { filter: drop-shadow(0 0 4px #d4a84344); }
+.g-cell[data-id="teapot"] .c-emoji { filter: drop-shadow(0 0 8px #4488ff88) !important; animation: teapot-pulse 1.5s infinite; }
+@keyframes teapot-pulse { 0%,100%{filter:drop-shadow(0 0 8px #4488ff88)}50%{filter:drop-shadow(0 0 16px #4488ffcc)} }
+
+/* STATS PANEL */
+.stats-panel { background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.stats-header { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-family: 'Cinzel', serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 3px; display: flex; align-items: center; gap: 0.5rem; }
+.stats-live { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: 0.55rem; color: var(--text3); }
+.stats-live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green2); animation: blink 1s infinite; }
+.stats-scroll { flex: 1; overflow-y: auto; padding: 0.6rem; }
+.m-card { border: 1px solid var(--border); border-radius: 4px; padding: 0.55rem 0.6rem; margin-bottom: 0.45rem; background: var(--bg3); position: relative; overflow: hidden; transition: border-color 0.4s; }
+.m-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--gold); opacity: 0.3; transition: opacity 0.3s; }
+.m-card.danger::before { background: var(--red3); }
+.m-card.safe::before { background: var(--green2); }
+.m-card.magic::before { background: var(--purple2); }
+.m-card.update { animation: card-flash 0.5s ease; border-color: var(--gold); }
+.m-card.update::before { opacity: 1; }
+@keyframes card-flash { 0%{background:#d4a84311}100%{background:var(--bg3)} }
+.m-label { font-size: 0.55rem; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.25rem; }
+.m-value { font-size: 1rem; font-family: 'Share Tech Mono', monospace; color: var(--gold2); line-height: 1; }
+.m-value.red { color: var(--red3); }
+.m-value.green { color: var(--green2); }
+.m-value.purple { color: var(--purple2); }
+.m-bar-bg { height: 3px; background: var(--border); border-radius: 2px; margin-top: 0.35rem; overflow: hidden; }
+.m-bar { height: 100%; border-radius: 2px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); background: var(--gold); }
+.m-bar.red { background: var(--red3); }
+.m-bar.green { background: var(--green2); }
+.m-bar.purple { background: var(--purple2); }
+.m-note { font-size: 0.55rem; color: var(--text3); margin-top: 0.3rem; font-family: 'Crimson Pro', serif; font-style: italic; line-height: 1.4; }
+.osha-alert { border-radius: 3px; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; font-size: 0.6rem; letter-spacing: 0.5px; border: 1px solid var(--border); color: var(--text3); background: var(--bg3); transition: all 0.3s; }
+.osha-alert.warn { border-color: #cc222244; color: var(--red2); background: #8b000011; }
+.osha-alert.ok { border-color: #22cc4444; color: var(--green2); background: #00ff0008; }
+
+/* CHAT */
+.chat-section { position: fixed; bottom: 0; left: 200px; right: 280px; height: 220px; background: var(--panel); border-top: 2px solid var(--border2); display: flex; flex-direction: column; z-index: 20; }
+.chat-header-bar { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.chat-title { font-family: 'Cinzel', serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 2px; flex: 1; }
+.chat-indicators { display: flex; gap: 0.5rem; align-items: center; }
+.reviewer-pill { display: flex; align-items: center; gap: 4px; font-size: 0.55rem; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text3); }
+.reviewer-pill.typing { border-color: var(--gold); color: var(--gold); animation: pill-glow 1s infinite; }
+@keyframes pill-glow { 0%,100%{box-shadow:none}50%{box-shadow:0 0 6px #d4a84344} }
+.chat-messages { flex: 1; overflow-y: auto; padding: 0.4rem 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.chat-msg { display: flex; gap: 0.5rem; animation: msg-slide 0.3s cubic-bezier(0.36,0.07,0.19,0.97); }
+@keyframes msg-slide { from{opacity:0;transform:translateY(8px) scale(0.98)}to{opacity:1;transform:none} }
+.c-av { width: 26px; height: 26px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; border: 1px solid var(--border); background: var(--bg3); }
+.c-av.grimm { border-color: #d4a84344; background: #1a0800; }
+.c-av.skull { border-color: #aa44ff44; background: #0d0018; }
+.c-av.voss { border-color: #22cc4444; background: #001808; }
+.c-av.r4 { border-color: #cc222244; background: #180000; }
+.c-av.sys { border-color: var(--border); }
+.c-body { flex: 1; min-width: 0; }
+.c-who { font-size: 0.55rem; color: var(--text3); margin-bottom: 2px; display: flex; gap: 6px; align-items: baseline; }
+.c-who .name { font-family: 'Cinzel', serif; }
+.c-who .name.g { color: var(--gold); }
+.c-who .name.s { color: var(--purple2); }
+.c-who .name.v { color: var(--green2); }
+.c-who .name.r { color: var(--red3); }
+.c-who .role { color: var(--text3); font-style: italic; font-family: 'Crimson Pro', serif; }
+.c-text { font-family: 'Crimson Pro', serif; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+.c-text em { color: var(--gold); font-style: italic; }
+.typing-dots { display: flex; gap: 3px; padding: 6px 0; }
+.typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text3); animation: tdot 1.2s infinite; }
+.typing-dot:nth-child(2){animation-delay:0.2s}.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes tdot { 0%,100%{transform:translateY(0);opacity:0.3}50%{transform:translateY(-4px);opacity:1} }
+
+/* MODAL */
+.modal-bg { position: fixed; inset: 0; background: #000000cc; display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; backdrop-filter: blur(4px); }
+.modal-bg.open { display: flex; }
+.modal-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 6px; max-width: 680px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 2rem; position: relative; box-shadow: 0 0 80px #d4a84322,0 40px 80px #00000088; animation: modal-appear 0.4s cubic-bezier(0.36,0.07,0.19,0.97); }
+@keyframes modal-appear { from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:none} }
+.modal-close-btn { position: sticky; top: 0; float: right; background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); font-family: 'Share Tech Mono',monospace; font-size: 0.65rem; padding: 0.25rem 0.6rem; cursor: pointer; border-radius: 3px; transition: all 0.2s; z-index: 5; }
+.modal-close-btn:hover { border-color: var(--red3); color: var(--red3); }
+.m-journal-name { font-family: 'Cinzel',serif; font-size: 1rem; color: var(--gold); text-align: center; letter-spacing: 3px; margin-bottom: 0.15rem; }
+.m-journal-sub { font-size: 0.6rem; color: var(--text3); text-align: center; letter-spacing: 2px; margin-bottom: 1.5rem; }
+.m-paper-title { font-family: 'Crimson Pro',serif; font-size: 1.3rem; font-weight: 600; color: var(--text); text-align: center; margin-bottom: 0.3rem; line-height: 1.4; }
+.m-authors { font-family: 'Crimson Pro',serif; font-style: italic; font-size: 0.82rem; color: var(--text2); text-align: center; }
+.m-doi { font-size: 0.6rem; color: var(--text3); text-align: center; margin: 0.3rem 0 1.5rem; letter-spacing: 1px; }
+.m-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.m-section { font-family: 'Cinzel',serif; font-size: 0.6rem; color: var(--gold); letter-spacing: 3px; margin-bottom: 0.5rem; }
+.m-body { font-family: 'Crimson Pro',serif; font-size: 0.88rem; color: var(--text2); line-height: 1.75; margin-bottom: 1rem; }
+.review-block { border-left: 2px solid var(--border2); padding: 0.6rem 0.75rem; margin-bottom: 0.6rem; border-radius: 0 4px 4px 0; background: var(--bg3); }
+.review-block.g{border-color:var(--gold)}.review-block.s{border-color:var(--purple2)}.review-block.v{border-color:var(--green2)}.review-block.r4{border-color:var(--red3)}
+.rb-name { font-family: 'Cinzel',serif; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 0.3rem; }
+.rb-name.g{color:var(--gold)}.rb-name.s{color:var(--purple2)}.rb-name.v{color:var(--green2)}.rb-name.r4{color:var(--red3)}
+.rb-text { font-family: 'Crimson Pro',serif; font-size: 0.85rem; color: var(--text2); line-height: 1.6; }
+.verdict-block { border: 2px solid var(--red2); border-radius: 5px; padding: 1.25rem; text-align: center; margin-top: 1rem; background: #8b000011; position: relative; overflow: hidden; }
+.verdict-block.accepted { border-color: var(--green2); background: #00ff0008; }
+.verdict-block::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg,transparent,transparent 10px,#ffffff02 10px,#ffffff02 11px); }
+.verdict-stamp { font-family: 'Cinzel',serif; font-size: clamp(1rem,4vw,1.8rem); font-weight: 900; color: var(--red3); letter-spacing: 4px; text-shadow: 0 0 20px #cc222244; transform: rotate(-3deg); display: inline-block; border: 3px solid var(--red3); padding: 0.2rem 0.75rem; opacity: 0.9; }
+.verdict-stamp.accepted { color: var(--green2); border-color: var(--green2); text-shadow: 0 0 20px #22cc4444; transform: rotate(-2deg); }
+.verdict-reason { font-family: 'Crimson Pro',serif; font-size: 0.85rem; color: var(--text2); margin-top: 0.75rem; line-height: 1.6; position: relative; }
+.teapot-notice { margin-top: 1rem; border: 1px solid #4488ff88; border-radius: 4px; padding: 0.75rem; background: #4488ff08; font-family: 'Share Tech Mono',monospace; font-size: 0.7rem; color: var(--blue2); line-height: 1.8; }
+.teapot-notice .code { background: var(--bg3); padding: 0.4rem; border-radius: 3px; display: block; margin-top: 0.4rem; color: var(--green2); font-size: 0.65rem; }
+
+/* LOADING */
+.loading-screen { position: fixed; inset: 0; background: #000000ee; display: none; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; gap: 1rem; backdrop-filter: blur(8px); }
+.loading-screen.open { display: flex; }
+.loading-crystal { font-size: 3rem; animation: crystal-spin 2s linear infinite; }
+@keyframes crystal-spin { 0%{transform:rotateY(0deg) scale(1);filter:drop-shadow(0 0 10px #d4a84388)}50%{transform:rotateY(180deg) scale(1.1);filter:drop-shadow(0 0 20px #d4a843cc)}100%{transform:rotateY(360deg) scale(1);filter:drop-shadow(0 0 10px #d4a84388)} }
+.loading-title { font-family: 'Cinzel',serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 4px; animation: title-pulse 1.5s infinite; }
+.loading-sub { font-size: 0.65rem; color: var(--text3); letter-spacing: 3px; }
+.loading-steps { display: flex; flex-direction: column; gap: 0.4rem; width: 300px; margin-top: 0.5rem; }
+.ls { font-size: 0.65rem; color: var(--text3); display: flex; gap: 0.6rem; align-items: center; transition: color 0.3s; }
+.ls::before{content:'[ ]';color:var(--border2);min-width:24px}
+.ls.done{color:var(--green2)}.ls.done::before{content:'[✓]';color:var(--green2)}
+.ls.active{color:var(--gold)}.ls.active::before{content:'[~]';color:var(--gold);animation:blink 0.8s infinite}
+
+/* TOAST */
+.toast-wrap { position: fixed; bottom: 240px; left: 50%; transform: translateX(-50%); z-index: 3000; pointer-events: none; display: flex; flex-direction: column; gap: 0.4rem; align-items: center; }
+.toast { background: var(--bg2); border: 1px solid var(--gold); color: var(--gold); font-size: 0.7rem; padding: 0.4rem 1rem; border-radius: 20px; letter-spacing: 1px; opacity: 0; transform: translateY(10px) scale(0.95); transition: all 0.3s; box-shadow: 0 0 12px #d4a84333; white-space: nowrap; }
+.toast.show{opacity:1;transform:translateY(0) scale(1)}
+.toast.warn{border-color:var(--red3);color:var(--red3);box-shadow:0 0 12px #cc222233}
+.toast.info{border-color:var(--blue2);color:var(--blue2);box-shadow:0 0 12px #4488ff33}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+
+@media(max-width:768px){
+  .app-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto}
+  .palette{max-height:130px;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .palette-scroll{display:flex;gap:4px;padding:0.5rem;flex-direction:row;overflow-x:auto}
+  .palette-section-label{display:none}
+  .tile-option{min-width:100px}
+  .stats-panel{border-left:none;border-top:1px solid var(--border);max-height:200px;flex-direction:row}
+  .stats-scroll{display:flex;gap:0.5rem;flex-direction:row;overflow-x:auto}
+  .m-card{min-width:120px;flex-shrink:0}
+  .chat-section{left:0;right:0;height:180px}
+  #dungeon-grid{grid-template-columns:repeat(8,42px);grid-template-rows:repeat(6,42px)}
+  .g-cell{width:42px;height:42px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer" id="bg-layer"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top-line">⚔ SUBTERRANEAN HAZARD RESEARCH DIVISION ⚔</div>
+  <div class="journal-name">
+    <span class="journal-skull">💀</span>DUNGEON LAB<span class="journal-skull">💀</span>
+  </div>
+  <div class="journal-sub">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
+  <div class="journal-meta">VOL. 47 · EST. 1347 AD · ISSN 1347-DOOM · IMPACT FACTOR: 0.003 · PEER REVIEWED (MOSTLY)</div>
+  <div class="header-bars">
+    <div class="header-bar"></div><div class="header-bar gold"></div><div class="header-bar"></div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span class="sb-label">🤖 AI REVIEWERS:</span>
+  <div class="api-status-pill checking" id="api-pill">
+    <div class="status-dot"></div>
+    <span id="api-pill-text">Connecting to backend...</span>
+  </div>
+  <span class="sb-label" style="margin-left:0.5rem">Powered by Gemini 2.0 Flash</span>
+  <span class="teapot-418">🫖 /brew → HTTP 418 I'm a Teapot (RFC 2324)</span>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-wrap">
+
+  <!-- PALETTE -->
+  <div class="palette">
+    <div class="palette-header">🏰 TILE PALETTE</div>
+    <div class="palette-scroll" id="palette-scroll">
+      <div class="palette-section-label">ROOMS</div>
+      <div class="tile-option" id="tp-entrance" onclick="pick('entrance','🚪','Dungeon Entrance','room')"><span class="t-emoji">🚪</span><div class="t-info"><div class="t-name">Entrance</div><div class="t-tag">start point</div></div></div>
+      <div class="tile-option" id="tp-throne" onclick="pick('throne','👑','Throne Room','room')"><span class="t-emoji">👑</span><div class="t-info"><div class="t-name">Throne Room</div><div class="t-tag">prestige +40</div></div></div>
+      <div class="tile-option" id="tp-library" onclick="pick('library','📚','Dark Library','room')"><span class="t-emoji">📚</span><div class="t-info"><div class="t-name">Dark Library</div><div class="t-tag">lore +vibes</div></div></div>
+      <div class="tile-option" id="tp-treasury" onclick="pick('treasury','💰','Treasury','room')"><span class="t-emoji">💰</span><div class="t-info"><div class="t-name">Treasury</div></div><span class="t-badge special">LOOT</span></div>
+      <div class="tile-option" id="tp-barracks" onclick="pick('barracks','🛡️','Barracks','room')"><span class="t-emoji">🛡️</span><div class="t-info"><div class="t-name">Barracks</div><div class="t-tag">minion lodging</div></div></div>
+
+      <div class="palette-section-label">TRAPS & HAZARDS</div>
+      <div class="tile-option" id="tp-lava" onclick="pick('lava','🌋','Lava Pit','trap')"><span class="t-emoji">🌋</span><div class="t-info"><div class="t-name">Lava Pit</div><div class="t-tag">very warm</div></div><span class="t-badge danger">HOT</span></div>
+      <div class="tile-option" id="tp-spikes" onclick="pick('spikes','⚡','Spike Trap','trap')"><span class="t-emoji">⚡</span><div class="t-info"><div class="t-name">Spike Trap</div><div class="t-tag">pointy</div></div><span class="t-badge danger">OSHA</span></div>
+      <div class="tile-option" id="tp-pit" onclick="pick('pit','🕳️','Bottomless Pit','trap')"><span class="t-emoji">🕳️</span><div class="t-info"><div class="t-name">Bottomless Pit</div><div class="t-tag">no bottom</div></div></div>
+      <div class="tile-option" id="tp-poison" onclick="pick('poison','☠️','Poison Gas','trap')"><span class="t-emoji">☠️</span><div class="t-info"><div class="t-name">Poison Gas</div><div class="t-tag">EPA violation</div></div><span class="t-badge danger">EPA</span></div>
+
+      <div class="palette-section-label">MONSTERS</div>
+      <div class="tile-option" id="tp-goblin" onclick="pick('goblin','👺','Goblin Nest','monster')"><span class="t-emoji">👺</span><div class="t-info"><div class="t-name">Goblin Nest</div><div class="t-tag">union member</div></div></div>
+      <div class="tile-option" id="tp-dragon" onclick="pick('dragon','🐉','Dragon Lair','monster')"><span class="t-emoji">🐉</span><div class="t-info"><div class="t-name">Dragon Lair</div><div class="t-tag">carbon ++</div></div><span class="t-badge danger">CO₂</span></div>
+      <div class="tile-option" id="tp-skeleton" onclick="pick('skeleton','💀','Skeleton Army','monster')"><span class="t-emoji">💀</span><div class="t-info"><div class="t-name">Skeleton Army</div><div class="t-tag">no benefits</div></div></div>
+      <div class="tile-option" id="tp-beholder" onclick="pick('beholder','👁️','Beholder Den','monster')"><span class="t-emoji">👁️</span><div class="t-info"><div class="t-name">Beholder Den</div><div class="t-tag">staring contest</div></div></div>
+      <div class="tile-option" id="tp-troll" onclick="pick('troll','🧌','Troll Bridge','monster')"><span class="t-emoji">🧌</span><div class="t-info"><div class="t-name">Troll Bridge</div><div class="t-tag">asks riddles</div></div></div>
+
+      <div class="palette-section-label">SPECIAL</div>
+      <div class="tile-option" id="tp-magic" onclick="pick('magic','🔮','Magic Portal','special')"><span class="t-emoji">🔮</span><div class="t-info"><div class="t-name">Magic Portal</div></div><span class="t-badge magic">ARCANE</span></div>
+      <div class="tile-option" id="tp-boss" onclick="pick('boss','😈','Boss Chamber','special')"><span class="t-emoji">😈</span><div class="t-info"><div class="t-name">Boss Chamber</div></div><span class="t-badge danger">FINAL</span></div>
+      <div class="tile-option" id="tp-teapot" onclick="pick('teapot','🫖','Teapot Room','special')"><span class="t-emoji">🫖</span><div class="t-info"><div class="t-name">Teapot Room</div><div class="t-tag">RFC 2324</div></div><span class="t-badge magic">418</span></div>
+      <div class="tile-option" id="tp-altar" onclick="pick('altar','🗿','Dark Altar','special')"><span class="t-emoji">🗿</span><div class="t-info"><div class="t-name">Dark Altar</div><div class="t-tag">vibes +++</div></div><span class="t-badge special">EVIL</span></div>
+
+      <div class="palette-section-label">INFRASTRUCTURE</div>
+      <div class="tile-option" id="tp-corridor" onclick="pick('corridor','🟫','Corridor','infra')"><span class="t-emoji">🟫</span><div class="t-info"><div class="t-name">Corridor</div><div class="t-tag">fire code §47</div></div></div>
+      <div class="tile-option" id="tp-wall" onclick="pick('wall','🧱','Wall','infra')"><span class="t-emoji">🧱</span><div class="t-info"><div class="t-name">Reinforced Wall</div><div class="t-tag">load-bearing</div></div></div>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid-area">
+    <div class="grid-toolbar">
+      <button class="tb-btn active" id="btn-place" onclick="setMode('place')">✏ PLACE</button>
+      <button class="tb-btn" id="btn-erase" onclick="setMode('erase')">🗑 ERASE</button>
+      <button class="tb-btn clear" onclick="clearAll()">⚠ CLEAR DUNGEON</button>
+      <button class="publish-btn" onclick="submitPeerReview()">📜 SUBMIT FOR PEER REVIEW</button>
+      <span class="selected-label">Selected: <span id="sel-label">— pick a tile</span></span>
+    </div>
+    <div class="grid-viewport">
+      <div id="dungeon-grid"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-panel">
+    <div class="stats-header">
+      📊 LIVE METRICS
+      <div class="stats-live"><div class="stats-live-dot"></div> REAL-TIME</div>
+    </div>
+    <div class="stats-scroll">
+      <div class="osha-alert" id="osha">⚠ AWAITING DUNGEON DATA — Place tiles to begin analysis</div>
+      <div class="m-card danger" id="mc-mort"><div class="m-label">HERO MORTALITY PROB.</div><div class="m-value red" id="mv-mort">0.00%</div><div class="m-bar-bg"><div class="m-bar red" id="mb-mort" style="width:0%"></div></div><div class="m-note" id="mn-mort">No hazards. Heroes feel safe. Embarrassing.</div></div>
+      <div class="m-card magic" id="mc-vibes"><div class="m-label">DUNGEON AMBIANCE (VIBES/m²)</div><div class="m-value purple" id="mv-vibes">0.0</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-vibes" style="width:0%"></div></div><div class="m-note" id="mn-vibes">Currently identical to a parking garage.</div></div>
+      <div class="m-card" id="mc-evil"><div class="m-label">EVIL DENSITY (evil/ft²)</div><div class="m-value" id="mv-evil">0.000</div><div class="m-bar-bg"><div class="m-bar" id="mb-evil" style="width:0%"></div></div><div class="m-note" id="mn-evil">Min. required: 0.42/ft² (Municipal Code §666)</div></div>
+      <div class="m-card safe" id="mc-goblin"><div class="m-label">GOBLIN WELLBEING INDEX</div><div class="m-value green" id="mv-goblin">N/A</div><div class="m-bar-bg"><div class="m-bar green" id="mb-goblin" style="width:0%"></div></div><div class="m-note" id="mn-goblin">No goblins. Union psychologists idle (still paid).</div></div>
+      <div class="m-card" id="mc-co2"><div class="m-label">LAVA CARBON FOOTPRINT</div><div class="m-value" id="mv-co2">0 Mt/yr</div><div class="m-bar-bg"><div class="m-bar" id="mb-co2" style="width:0%"></div></div><div class="m-note" id="mn-co2">Carbon neutral. Shamefully eco-friendly.</div></div>
+      <div class="m-card" id="mc-trap"><div class="m-label">TRAP DENSITY (OSHA §47-D)</div><div class="m-value" id="mv-trap">0.0 /room</div><div class="m-bar-bg"><div class="m-bar" id="mb-trap" style="width:0%"></div></div><div class="m-note" id="mn-trap">Standard: 2.7/room (Tomb of Horrors, 1978)</div></div>
+      <div class="m-card magic" id="mc-mana"><div class="m-label">ARCANE COMPLEXITY (mana-hrs)</div><div class="m-value purple" id="mv-mana">0 mh</div><div class="m-bar-bg"><div class="m-bar purple" id="mb-mana" style="width:0%"></div></div><div class="m-note" id="mn-mana">Requires portal for non-zero reading.</div></div>
+    </div>
+  </div>
+
+</div><!-- end app-wrap -->
+
+<!-- CHAT -->
+<div class="chat-section">
+  <div class="chat-header-bar">
+    <span class="chat-title">🔬 LIVE PEER REVIEW PANEL — Powered by Gemini 2.0 Flash</span>
+    <div class="chat-indicators">
+      <div class="reviewer-pill" id="pill-grimm">🧙 Grimm</div>
+      <div class="reviewer-pill" id="pill-skull">💀 Skullvane</div>
+      <div class="reviewer-pill" id="pill-voss">⚗️ Voss</div>
+      <div class="reviewer-pill" id="pill-r4">🗡️ #4 [MUTED]</div>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg">
+      <div class="c-av sys">📋</div>
+      <div class="c-body">
+        <div class="c-who"><span class="name">SESSION MODERATOR</span></div>
+        <div class="c-text">Panel convened. Connecting to Gemini-powered reviewer cluster... Reviewer #4 has already complained about the chairs.</div>
+      </div>
+    </div>
+    <div class="chat-msg">
+      <div class="c-av r4">🗡️</div>
+      <div class="c-body">
+        <div class="c-who"><span class="name r">REVIEWER #4</span><span class="role">· anonymous · clearly a villain</span></div>
+        <div class="c-text">mid.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal()">✕ CLOSE</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-crystal">🔮</div>
+  <div class="loading-title">CONVENING PEER REVIEWERS</div>
+  <div class="loading-sub">GEMINI IS ARGUING WITH ITSELF. PLEASE WAIT.</div>
+  <div class="loading-steps">
+    <div class="ls" id="ls0">Scanning dungeon topology</div>
+    <div class="ls" id="ls1">Computing mana-adjusted trap density</div>
+    <div class="ls" id="ls2">Consulting prior literature (1347 AD–present)</div>
+    <div class="ls" id="ls3">Drafting strongly-worded abstract</div>
+    <div class="ls" id="ls4">Translating Reviewer #4's "mid" into academic prose</div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────
+// Change this to your deployed Render backend URL before deploying!
+// For local dev: 'http://localhost:3001'
+const BACKEND = 'https://dungeon-lab-backend.onrender.com';
+
+// ── STATE ──────────────────────────────────────────────────────
+const ROWS = 8, COLS = 10;
+let grid = {};
+let selected = null;
+let mode = 'place';
+let reviewerBusy = false;
+let lastTileId = null;
+let isDragging = false;
+let backendOnline = false;
+
+// ── BACKGROUND FX ──────────────────────────────────────────────
+function initBg() {
+  const bg = document.getElementById('bg-layer');
+  const runes = ['⚔','🗡','💀','🔮','⚗','🕯','🦇','🐍','💎','🧿','⚡','🌙'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'bg-rune';
+    el.textContent = runes[Math.floor(Math.random() * runes.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.animationDuration = (12 + Math.random() * 20) + 's';
+    el.style.animationDelay = (Math.random() * 15) + 's';
+    bg.appendChild(el);
+  }
+  function spawnEmber() {
+    const e = document.createElement('div'); e.className = 'ember';
+    e.style.left = (10 + Math.random() * 80) + '%';
+    e.style.bottom = '0';
+    e.style.setProperty('--dx', (Math.random() * 40 - 20) + 'px');
+    e.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    bg.appendChild(e);
+    setTimeout(() => e.remove(), 4000);
+  }
+  setInterval(spawnEmber, 300);
+}
+
+// ── BACKEND PING ───────────────────────────────────────────────
+async function pingBackend() {
+  try {
+    const r = await fetch(BACKEND + '/', { signal: AbortSignal.timeout(5000) });
+    const data = await r.json();
+    backendOnline = true;
+    document.getElementById('api-pill').className = 'api-status-pill ok';
+    document.getElementById('api-pill-text').textContent = 'Reviewers ONLINE (Gemini)';
+    addMsg('sys','📋','sys','SESSION MODERATOR',null,'<em>✓ Gemini reviewer cluster connected. Reviewers are already bickering about dungeon methodology.</em>');
+  } catch(e) {
+    backendOnline = false;
+    document.getElementById('api-pill').className = 'api-status-pill err';
+    document.getElementById('api-pill-text').textContent = 'Backend offline — static mode';
+    addMsg('sys','📋','sys','SESSION MODERATOR',null,'Backend unreachable. Reviewers working from memory (badly). Place tiles to begin static analysis.');
+  }
+}
+
+// ── GRID ───────────────────────────────────────────────────────
+function initGrid() {
+  const g = document.getElementById('dungeon-grid');
+  g.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'g-cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+      cell.onclick = () => handleCell(r, c);
+      cell.onmousedown = () => { isDragging = true; handleCell(r, c); };
+      cell.onmouseenter = () => { if (isDragging) handleCell(r, c); };
+      g.appendChild(cell);
+    }
+  }
+  document.addEventListener('mouseup', () => isDragging = false);
+}
+
+function pick(id, emoji, label, cat) {
+  selected = { id, emoji, label, cat };
+  document.querySelectorAll('.tile-option').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('tp-' + id);
+  if (el) el.classList.add('active');
+  document.getElementById('sel-label').textContent = emoji + ' ' + label;
+  if (mode === 'erase') setMode('place');
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-place').classList.toggle('active', m === 'place');
+  document.getElementById('btn-erase').classList.toggle('active', m === 'erase');
+}
+
+function handleCell(r, c) {
+  if (mode === 'erase') { eraseCell(r, c); return; }
+  if (!selected) { toast('👈 Pick a tile from the palette first!'); return; }
+  placeCell(r, c);
+}
+
+function placeCell(r, c) {
+  const key = r + ',' + c;
+  grid[key] = { ...selected };
+  renderCell(r, c);
+  updateMetrics();
+  if (selected.id === 'teapot') {
+    toast('☕ 418 I\'m a Teapot! RFC 2324 activated.', 'info');
+    addMsg('sys','📋','sys','SESSION MODERATOR',null,'<em>🫖 ALERT: Teapot Room placed. This dungeon now returns HTTP 418 I\'m a Teapot to all brew requests. Larry Masinter has been cc\'d. Try GET /brew on the backend.</em>');
+  }
+  triggerReviewer(selected);
+}
+
+function eraseCell(r, c) {
+  const key = r + ',' + c;
+  if (!grid[key]) return;
+  delete grid[key];
+  renderCell(r, c);
+  updateMetrics();
+}
+
+function renderCell(r, c) {
+  const key = r + ',' + c;
+  const cell = document.querySelector(`.g-cell[data-r="${r}"][data-c="${c}"]`);
+  const tile = grid[key];
+  cell.innerHTML = '';
+  if (tile) {
+    cell.className = 'g-cell occupied pop';
+    cell.dataset.cat = tile.cat;
+    cell.dataset.id = tile.id;
+    const em = document.createElement('div'); em.className = 'c-emoji'; em.textContent = tile.emoji;
+    const del = document.createElement('div'); del.className = 'c-del'; del.textContent = '✕';
+    del.onclick = (e) => { e.stopPropagation(); eraseCell(r, c); };
+    cell.append(em, del);
+    setTimeout(() => cell.classList.remove('pop'), 400);
+  } else {
+    cell.className = 'g-cell';
+    delete cell.dataset.cat;
+    delete cell.dataset.id;
+  }
+}
+
+function clearAll() {
+  if (Object.keys(grid).length === 0) return;
+  grid = {};
+  initGrid();
+  updateMetrics();
+  toast('🗑 Dungeon cleared. Goblins filing for unemployment.', 'warn');
+  addMsg('sys','📋','sys','SESSION MODERATOR',null,'Dungeon cleared. Reviewers disappointed. Reviewer #4: "mid."');
+}
+
+// ── METRICS ────────────────────────────────────────────────────
+function updateMetrics() {
+  const tiles = Object.values(grid);
+  const n = tiles.length;
+  const traps = tiles.filter(t=>t.cat==='trap').length;
+  const monsters = tiles.filter(t=>t.cat==='monster').length;
+  const rooms = tiles.filter(t=>t.cat==='room').length;
+  const special = tiles.filter(t=>t.cat==='special').length;
+  const goblins = tiles.filter(t=>t.id==='goblin').length;
+  const lava = tiles.filter(t=>t.id==='lava').length;
+  const dragon = tiles.filter(t=>t.id==='dragon').length;
+  const boss = tiles.filter(t=>t.id==='boss').length;
+  const portal = tiles.filter(t=>t.id==='magic').length;
+  const altar = tiles.filter(t=>t.id==='altar').length;
+
+  const mort = Math.min(99.9,(traps*13.1)+(monsters*9.2)+(boss*28)+(lava*16));
+  const vibes = Math.min(100,(rooms*9)+(special*14)+(monsters*5)-(traps*2)+(portal*18)+(altar*20));
+  const evil = n>0?Math.min(5,(traps*2.2+monsters*1.9+boss*6+altar*3)/Math.max(1,n)):0;
+  const gwi = goblins>0?Math.max(0,100-(traps*14)-(lava*22)+(rooms*12)-(boss*8)):-1;
+  const co2 = (lava*847)+(dragon*12400);
+  const trapD = rooms>0?traps/rooms:0;
+  const mana = (portal*42)+(special*18)+(boss*33)+(altar*25);
+
+  setM('mort',mort.toFixed(2)+'%',mort/100,'red',mort>90?'Statistical certainty: everyone dies. Congrats.':mort>60?'Acceptable lethality. OSHA is concerned.':mort>20?'Some danger present. Needs more spikes.':'Heroes are having a pleasant afternoon stroll.');
+  setM('vibes',vibes.toFixed(1)+' V/m²',vibes/100,'purple',vibes>85?'Immaculate vibes. Monsters feel inspired.':vibes>50?'Moderate atmosphere. Needs more despair.':vibes>20?'Vibes equivalent to a DMV waiting room.':'Zero ambiance detected. Is this a storage unit?');
+  setM('evil',evil.toFixed(3)+' evil/ft²',evil/5,evil>1?'red':'',evil>2.5?'Evil density exceeds zoning limits. Council notified.':evil>0.42?'✓ Zoning compliant (Municipal Code §666).':'VIOLATION: Below 0.42/ft² minimum. Citation issued.');
+  if(gwi<0){setM('goblin','N/A',0,'green','No goblins. HR psychologists idle (still receiving salary).');}
+  else{setM('goblin',gwi.toFixed(0)+'/100',gwi/100,gwi>60?'green':'red',gwi>70?'Goblins thriving. Suspicious — check for union activity.':gwi>40?'Moderate existential dread. Normal for the sector.':'⚠ Goblin trauma critical. Mandatory counseling ordered.');}
+  setM('co2',co2>0?co2.toLocaleString()+' Mt/yr':'0 Mt/yr',Math.min(1,co2/50000),co2>10000?'red':'',co2>25000?'🌍 Dungeon is a climate emergency. EU fined you.':co2>5000?'Significant emissions. Carbon credits required.':'Carbon neutral. Embarrassingly eco-friendly for a dungeon.');
+  setM('trap',trapD.toFixed(1)+'/room',Math.min(1,trapD/4),trapD>3?'red':'',trapD>3?'Exceeds Tomb of Horrors standard (1978). Impressive.':trapD>=2.7?'✓ Meets JADSH standard (ref: ToH §3.4.1).':'Below 2.7/room standard. Methodologically weak.');
+  setM('mana',mana>0?mana+' mh':'0 mh',Math.min(1,mana/200),'purple',mana>150?'Arcane complexity critical. Physics dept. confused.':mana>50?'Moderate magical complexity. Wizards approve.':'Barely magical. Could pass for a storage room.');
+
+  const osha = document.getElementById('osha');
+  if(traps===0&&monsters===0&&n>0){osha.textContent='✓ OSHA STATUS: COMPLIANT — Nothing dangerous exists (concerning)';osha.className='osha-alert ok';}
+  else if(mort>80){osha.textContent='⚠ OSHA STATUS: 47 VIOLATIONS — DUNGEON CONDEMNED';osha.className='osha-alert warn';}
+  else if(n===0){osha.textContent='⚠ AWAITING DATA — Place tiles to begin analysis';osha.className='osha-alert';}
+  else{osha.textContent='⚠ OSHA STATUS: UNDER REVIEW — Form 27-B/DUNGEON in progress';osha.className='osha-alert warn';}
+}
+
+function setM(id,val,ratio,cls,note){
+  document.getElementById('mv-'+id).textContent=val;
+  document.getElementById('mv-'+id).className='m-value'+(cls?' '+cls:'');
+  const bar=document.getElementById('mb-'+id);
+  bar.style.width=(Math.min(1,Math.max(0,ratio))*100)+'%';
+  bar.className='m-bar'+(cls?' '+cls:'');
+  document.getElementById('mn-'+id).textContent=note;
+  const card=document.getElementById('mc-'+id);
+  card.classList.add('update');
+  setTimeout(()=>card.classList.remove('update'),500);
+}
+
+// ── CHAT ───────────────────────────────────────────────────────
+function addMsg(type,icon,pillId,name,nameClass,text){
+  const msgs=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className='chat-msg';
+  div.innerHTML=`<div class="c-av ${type}">${icon}</div><div class="c-body"><div class="c-who"><span class="name ${nameClass||''}">${name}</span></div><div class="c-text">${text}</div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(type,icon,pillId){
+  const msgs=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className='chat-msg';div.id='typing-'+type;
+  div.innerHTML=`<div class="c-av ${type}">${icon}</div><div class="c-body"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  if(pillId)document.getElementById(pillId)?.classList.add('typing');
+}
+
+function removeTyping(type,pillId){
+  document.getElementById('typing-'+type)?.remove();
+  if(pillId)document.getElementById(pillId)?.classList.remove('typing');
+}
+
+// ── REVIEWER (via backend) ─────────────────────────────────────
+const reviewers=[
+  {type:'grimm',icon:'🧙',pill:'pill-grimm',name:'PROF. ALDRIC GRIMM',nc:'g',key:'grimm'},
+  {type:'skull',icon:'💀',pill:'pill-skull',name:'DR. SKULLVANE',nc:'s',key:'skullvane'},
+  {type:'voss',icon:'⚗️',pill:'pill-voss',name:'DR. LENA VOSS',nc:'v',key:'voss'},
+];
+
+async function triggerReviewer(tile){
+  if(!backendOnline||reviewerBusy)return;
+  if(lastTileId===tile.id&&Object.keys(grid).length>2)return;
+  lastTileId=tile.id;
+  reviewerBusy=true;
+  setTimeout(()=>reviewerBusy=false,8000);
+
+  const rev=reviewers[Math.floor(Math.random()*reviewers.length)];
+  const summary=Object.values(grid).map(t=>t.label).join(', ')||'empty';
+  showTyping(rev.type,rev.icon,rev.pill);
+
+  try{
+    const r=await fetch(BACKEND+'/api/reviewer',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tile,dungeonSummary:summary,reviewer:rev.key})
+    });
+    const data=await r.json();
+    removeTyping(rev.type,rev.pill);
+    addMsg(rev.type,rev.icon,null,rev.name,rev.nc,data.text||'<em>[Reviewer momentarily speechless]</em>');
+  }catch(e){
+    removeTyping(rev.type,rev.pill);
+    addMsg(rev.type,rev.icon,null,rev.name,rev.nc,'<em>[Reviewer temporarily unreachable. Filing a complaint about it.]</em>');
+  }
+}
+
+// ── PEER REVIEW PAPER ──────────────────────────────────────────
+async function submitPeerReview(){
+  const tiles=Object.values(grid);
+  if(tiles.length<3){toast('⚠ Need at least 3 tiles to submit!','warn');return;}
+  const hasTeapot=tiles.some(t=>t.id==='teapot');
+  showLoading(true);
+
+  if(!backendOnline){
+    await new Promise(r=>setTimeout(r,2500));
+    showLoading(false);
+    showModal(fallbackReport(tiles,hasTeapot));
+    return;
+  }
+
+  const dungeonLayout=Object.entries(grid).map(([k,t])=>`[${k}]: ${t.emoji} ${t.label}`).join('\n');
+  const traps=tiles.filter(t=>t.cat==='trap').length;
+  const monsters=tiles.filter(t=>t.cat==='monster').length;
+  const rooms=tiles.filter(t=>t.cat==='room').length;
+  const mort=Math.min(99.9,(traps*13.1)+(monsters*9.2));
+  const metrics=`${tiles.length} tiles, ${rooms} rooms, ${traps} traps, ${monsters} monsters, estimated mortality ${mort.toFixed(1)}%`;
+
+  try{
+    const r=await fetch(BACKEND+'/api/peer-review',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({dungeonLayout,metrics})
+    });
+    const data=await r.json();
+    showLoading(false);
+    if(data.error)showModal(fallbackReport(tiles,hasTeapot));
+    else showModal(buildReport(data,hasTeapot));
+  }catch(e){
+    showLoading(false);
+    showModal(fallbackReport(tiles,hasTeapot));
+  }
+}
+
+function buildReport(r,hasTeapot){
+  const isAccept=r.verdict==='ACCEPT';
+  const verdictText={ACCEPT:'✓ ACCEPTED',MINOR_REVISION:'~ MINOR REVISION',MAJOR_REVISION:'⚠ MAJOR REVISION',DESK_REJECT:'✕ DESK REJECTED'}[r.verdict]||'✕ REJECTED';
+  const doi='10.1347/jadsh.'+Date.now().toString(36).toUpperCase();
+  return `
+    <div class="m-journal-name">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
+    <div class="m-journal-sub">PEER REVIEW DECISION · VOL. 47 · EST. 1347 AD · ISSN 1347-DOOM · Powered by Gemini 2.0 Flash</div>
+    <div class="m-paper-title">${r.title||'Untitled Dungeon: A Methodological Catastrophe'}</div>
+    <div class="m-authors">Anonymous Dungeon Architect et al. · Received ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+    <div class="m-doi">DOI: ${doi} · Handling Editor: Prof. D. Grimm · Reviewers: 4 (1 muted)</div>
+    <hr class="m-divider"/>
+    <div class="m-section">ABSTRACT</div><div class="m-body">${r.abstract}</div>
+    <div class="m-section">METHODOLOGICAL CONCERNS</div><div class="m-body">${r.methodology}</div>
+    <div class="m-section">STATISTICAL ANALYSIS</div><div class="m-body">${r.stats}</div>
+    <div class="m-section">REVIEWER COMMENTS</div>
+    <div class="review-block g"><div class="rb-name g">🧙 PROF. ALDRIC GRIMM · Subterranean Architecture, Ravenspire Univ.</div><div class="rb-text">${r.grimm}</div></div>
+    <div class="review-block s"><div class="rb-name s">💀 DR. SKULLVANE · Monster Behavioral Science, Institute of Applied Evil</div><div class="rb-text">${r.skullvane}</div></div>
+    <div class="review-block v"><div class="rb-name v">⚗️ DR. LENA VOSS · Trap Thermodynamics, MIT (Magical Institute of Traps)</div><div class="rb-text">${r.voss}</div></div>
+    <div class="review-block r4"><div class="rb-name r4">🗡️ REVIEWER #4 · [MUTED] · [APPEAL PENDING SINCE 1347]</div><div class="rb-text">${r.r4}</div></div>
+    <div class="m-section">DUNGEON ETHICAL REVIEW BOARD</div><div class="m-body">${r.erb}</div>
+    ${hasTeapot?`<div class="teapot-notice">🫖 HTCPCP/1.0 COMPLIANCE NOTICE<br>Teapot Room detected. Per RFC 2324 §2.3.2, this dungeon officially returns:<br><span class="code">HTTP/1.1 418 I'm a Teapot\nServer: DungeonLab/1.0\nContent-Type: message/coffeepot\n\n→ Try: curl ${BACKEND}/brew</span></div>`:''}
+    <div class="verdict-block${isAccept?' accepted':''}">
+      <div class="verdict-stamp${isAccept?' accepted':''}">${verdictText}</div>
+      <div class="verdict-reason">${r.verdict_reason}</div>
+    </div>`;
+}
+
+function fallbackReport(tiles,hasTeapot){
+  const traps=tiles.filter(t=>t.cat==='trap').length;
+  const monsters=tiles.filter(t=>t.cat==='monster').length;
+  return `
+    <div class="m-journal-name">Journal of Applied Dungeoneering & Subterranean Hazard Studies</div>
+    <div class="m-journal-sub">PEER REVIEW DECISION · VOL. 47 · EST. 1347 AD</div>
+    <div class="m-paper-title">An Empirical Analysis of a Deeply Questionable Dungeon Configuration</div>
+    <div class="m-authors">Anonymous Architect et al. · ${new Date().toLocaleDateString()}</div>
+    <div class="m-doi">DOI: 10.1347/jadsh.${Math.random().toString(36).substr(2,8).toUpperCase()}</div>
+    <hr class="m-divider"/>
+    <div class="m-section">ABSTRACT</div>
+    <div class="m-body">This submission presents a dungeon of ${tiles.length} tiles with ${traps} traps and ${monsters} monsters. The methodology is unclear. The authors appear confused about the difference between a dungeon and a storage unit. Backend connectivity issue prevented full AI review.</div>
+    <div class="m-section">REVIEWER COMMENTS</div>
+    <div class="review-block g"><div class="rb-name g">🧙 PROF. GRIMM</div><div class="rb-text">The corridor widths violate every principle established since 1347. I have filed 14 separate complaints. The lava pit lacks a proper drainage coefficient analysis. This is, frankly, an embarrassment to the field.</div></div>
+    <div class="review-block r4"><div class="rb-name r4">🗡️ REVIEWER #4 [MUTED]</div><div class="rb-text">mid.</div></div>
+    ${hasTeapot?`<div class="teapot-notice">🫖 418 I'm a Teapot — RFC 2324 §2.3.2 compliance confirmed. Larry Masinter notified.<span class="code">HTTP/1.1 418 I'm a Teapot</span></div>`:''}
+    <div class="verdict-block"><div class="verdict-stamp">✕ DESK REJECTED</div><div class="verdict-reason">Rejected without external review. Lacks methodological rigor, proper citations, and a statistically significant lava pit. Please revise and resubmit. We wish you luck. We do not mean this.</div></div>`;
+}
+
+// ── MODAL ──────────────────────────────────────────────────────
+function showModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-bg').classList.add('open');}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+document.getElementById('modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('modal-bg'))closeModal();});
+
+// ── LOADING ────────────────────────────────────────────────────
+function showLoading(show){
+  document.getElementById('loading-screen').classList.toggle('open',show);
+  if(show){
+    for(let i=0;i<5;i++)document.getElementById('ls'+i).className='ls';
+    let i=0;
+    const iv=setInterval(()=>{
+      if(i>0)document.getElementById('ls'+(i-1)).className='ls done';
+      if(i<5){document.getElementById('ls'+i).className='ls active';i++;}
+      else clearInterval(iv);
+    },700);
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg,type=''){
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className='toast'+(type?' '+type:'');
+  el.textContent=msg;
+  wrap.appendChild(el);
+  setTimeout(()=>el.classList.add('show'),10);
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3000);
+}
+
+// ── BOOT ───────────────────────────────────────────────────────
+initBg();
+initGrid();
+updateMetrics();
+pingBackend();
+</script>
+</body>
+</html>
