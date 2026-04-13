@@ -119,6 +119,7 @@ Generate a hilarious peer review report. Respond ONLY with valid JSON (no markdo
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     const data = await r.json();
+    console.log('GEMINI FULL RESPONSE:', JSON.stringify(data).substring(0, 500));
     let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     raw = raw.replace(/```json|```/g, '').trim();
     try {
