@@ -107,8 +107,26 @@ Generate a hilarious peer review report. Respond ONLY with valid JSON (no markdo
     const data = await r.json();
     let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     raw = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(raw);
-    res.json(parsed);
+    try {
+  const parsed = JSON.parse(raw);
+  res.json(parsed);
+} catch(e) {
+  console.error('JSON parse failed:', raw);
+  res.status(500).json({ 
+    error: 'Failed to parse Gemini response',
+    title: 'A Dungeon of Suspicious Methodology',
+    abstract: 'This dungeon defies conventional analysis.',
+    methodology: 'The methodology is unclear at best.',
+    stats: 'Statistics were attempted. They failed.',
+    grimm: 'The corridor widths violate everything since 1347.',
+    skullvane: 'The monsters show signs of existential dread.',
+    voss: 'Thermal efficiency is, frankly, embarrassing.',
+    r4: 'mid.',
+    verdict: 'DESK_REJECT',
+    verdict_reason: 'Rejected. We wish you luck. We do not mean this.',
+    erb: 'Ethics board concerned. Meeting scheduled for 1347 AD.'
+  });
+}
   } catch (e) {
     res.status(500).json({ error: 'Failed to parse Gemini response', detail: e.message });
   }
