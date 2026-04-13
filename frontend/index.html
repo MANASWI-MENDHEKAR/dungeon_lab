@@ -1115,7 +1115,7 @@ body::before {
 
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────
-const BACKEND = 'https://dungeon-lab.onrender.com';
+const BACKEND = 'https://dungeon-lab-backend.onrender.com';
 
 // ── STATE ──────────────────────────────────────────────────────
 const ROWS = 8, COLS = 10;
@@ -1155,12 +1155,11 @@ function initBg() {
 // ── BACKEND PING ───────────────────────────────────────────────
 async function pingBackend() {
   try {
-    const r = await fetch(BACKEND + '/', { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(BACKEND + '/', { signal: AbortSignal.timeout(15000) });
     const data = await r.json();
     backendOnline = true;
     document.getElementById('api-pill').className = 'api-status-pill ok';
     document.getElementById('api-pill-text').textContent = 'Reviewers ONLINE (Gemini)';
-    addMsg('sys','📋','sys','Session Moderator',null,'<em>✓ Gemini reviewer cluster connected. Reviewers are already bickering about dungeon methodology.</em>');
   } catch(e) {
     backendOnline = false;
     document.getElementById('api-pill').className = 'api-status-pill err';
@@ -1321,6 +1320,7 @@ function addMsg(type,icon,pillId,name,nameClass,text){
 
 function showTyping(type,icon,pillId){
   const msgs=document.getElementById('chat-messages');
+  if(!msgs) return;
   const div=document.createElement('div');
   div.className='chat-msg';div.id='typing-'+type;
   div.innerHTML=`<div class="c-av ${type}">${icon}</div><div class="c-body"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
